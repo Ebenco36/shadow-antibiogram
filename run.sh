@@ -181,13 +181,12 @@ fi
 
 # ---------------- modules to run (edit as needed) ----------------
 MODULES=(
-  # "src.runners.Preload"
-  # "src.runners.DataProcessing"
+  # "src.runners.Preload" # optional data preloading. Not needed since we already have preprocessed data.
+  # "src.runners.DataProcessing" # optional full data processing. Not needed since we already have preprocessed data.
   "src.runners.GenerateTables"
   "src.controllers.AMR.scripts.run_comprehensive_analysis"
-  "src.runners.Phase_I"
-  "src.runners.TestingPatterns"
-  # "src.runners.CoTestingRun"
+  "src.runners.CompleteTemporalAnalysis"
+  "src.runners.SummaryStatistics"
 )
 
 for m in "${MODULES[@]}"; do

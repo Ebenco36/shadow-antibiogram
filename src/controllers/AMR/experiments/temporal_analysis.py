@@ -2115,7 +2115,7 @@ def run_main_temporal(
     org_col: str = "NumberOrganisation",
     min_year: Optional[int] = None,
     max_year: Optional[int] = None,
-    base_dir: str = "./publication_outputs/manuscript",
+    base_dir: str = "./temporal_analysis/manuscript",
 ):
     """
     Run the full temporal analysis pipeline, including:

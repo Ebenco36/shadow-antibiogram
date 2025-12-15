@@ -171,6 +171,8 @@ results.tex
 pub_outputs/
 results_use_cases/
 publication_outputs/
+temporal_analysis/
+manuscript/
 
 WHO_Aware_data_resistance_combined.csv
 column_config.csv
