@@ -1,0 +1,23 @@
+from src.runners.Phases.Phase_I2A import run_temp_basic
+# from src.runners.Phases.Phase_I3 import run_phase_I3
+from src.runners.Phases.Phase_I2 import run_phase_I2
+from src.controllers.DataLoader import DataLoader
+from src.runners.Phases.Phase_I1 import run_phase_I1
+
+if __name__ == "__main__":
+    #################################################################################
+    ##################### LOAD DATASETS FOR ALL PROCESSES BELOW #####################
+    #################################################################################
+
+    loader = DataLoader("./datasets/WHO_Aware_data")
+    df_combined = loader.get_combined()
+    df = df_combined
+
+    # ===========Visual Analytics Pipeline for Antibiotic Testing Coverage============
+    run_phase_I1(df)
+    # # ==========Analysis Pipeline for Antibiotic Testing Disparities & Trends=========
+    run_phase_I2(main_df=df)
+    # # =====================Pipeline for AST Panel Breadth Analysis====================
+    # run_phase_I3(main_df=df) # might not be needed anymore
+
+    run_temp_basic(data_loader=loader, df=df)

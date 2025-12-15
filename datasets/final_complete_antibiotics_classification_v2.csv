@@ -1,0 +1,180 @@
+Abbreviation,Antibiotic Name,Class
+AMC,Amoxicillin/clavulanic acid,Beta-lactam/Beta-lactamase Inhibitor
+AMK,Amikacin,Aminoglycosides
+AMP,Ampicillin,Aminopenicillins
+AMS,Ampicillin/Sulbactam,Beta-lactam/Beta-lactamase Inhibitor
+AMX,Amoxicillin,Aminopenicillins
+AZT,Aztreonam,Monobactams
+CAZ,Ceftazidim,Cephalosporins (3rd Gen)
+CEP,Cefepim,Cephalosporins (4th Gen)
+CEZ,Cefazolin,Cephalosporins (1st Gen)
+CIP,Ciprofloxacin,Fluoroquinolones
+CLI,Clindamycin,Lincosamides
+CMP,Chloramphenicol,Other Classes
+COL,Colistin,Polymyxins
+CRO,Ceftriaxon,Cephalosporins (3rd Gen)
+CTM,Cefotiam,Cephalosporins (2nd Gen)
+CTX,Cefotaxim,Cephalosporins (3rd Gen)
+CXM,Cefuroxim,Cephalosporins (2nd Gen)
+DOX,Doxycyclin,Tetracyclines
+DPT,Daptomycin,Other Classes
+ERT,Ertapenem,Carbapenems
+ERY,Erythromycin,Macrolides
+FLU,Flucloxacillin,Antistaphylococcal Penicillins
+FOS,Fosfomycin,Other Classes
+FUS,fusidic acid,Other Classes
+GEN,Gentamicin,Aminoglycosides
+GHL,Gentamicin 500 (high level),Aminoglycosides
+IMP,Imipenem,Carbapenems
+LEV,Levofloxacin,Fluoroquinolones
+LIZ,Linezolid,Oxazolidinones
+MER,Meropenem,Carbapenems
+MOX,Moxifloxacin,Fluoroquinolones
+MUP,Mupirocin,Other Classes
+NFT,Nitrofurantoin,Nitrofurans
+OXA,Oxacillin,Antistaphylococcal Penicillins
+PEN,Penicillin,Penicillin
+PIP,Piperacillin,Extended-Spectrum Penicillins
+PIT,Piperacillin/Tazobactam,Beta-lactam/Beta-lactamase Inhibitor
+RAM,Rifampicin,Rifamycins
+SHL,Streptomycin 1000 (high level),Aminoglycosides
+STR,Streptomycin,Aminoglycosides
+SXT,Co-Trimoxazol,Sulfonamides and Folate Pathway Inhibitors
+TET,Tetracyclin,Tetracyclines
+TGC,Tigecyclin,Other Classes
+TOB,Tobramycin,Aminoglycosides
+TPL,Teicoplanin,Glycopeptides and Lipoglycopeptides
+VAN,Vancomycin,Glycopeptides and Lipoglycopeptides
+NAL,Nalidixinsäure,Fluoroquinolones
+SLD,Sulfadiazin,Sulfonamides and Folate Pathway Inhibitors
+TRP,Trimethoprim,Sulfonamides and Folate Pathway Inhibitors
+APH,Amphotericin B,Antifungal Agents
+AZL,Azlocillin,Extended-Spectrum Penicillins
+AZM,Azithromycin,Macrolides
+BTC,Bacitracin,Other Classes
+CAR,Carbenicillin,Extended-Spectrum Penicillins
+CAS,Caspofungin,Antifungal Agents
+CEC,Cefaclor,Cephalosporins (2nd Gen)
+CEX,Cefalexin,Cephalosporins (1st Gen)
+CFA,Cefuroxim-Axetil,Cephalosporins (2nd Gen)
+CFI,Cefixim,Cephalosporins (2nd Gen)
+CFL,Ceftiofur,Cephalosporins (3rd Gen)
+CFR,Cefadroxil,Cephalosporins (1st Gen)
+CIB,Ceftibuten,Cephalosporins (2nd Gen)
+CLN,Clinafloxacin,Fluoroquinolones
+CLR,Clarithromycin,Macrolides
+COX,Cefoxitin,Cephalosporins (2nd Gen)
+CPO,Cefpodoxim,Cephalosporins (2nd Gen)
+CPP,Cefpodoxim-Proxetil,Cephalosporins (2nd Gen)
+CTN,Cefalotin,Cephalosporins (1st Gen)
+CTR,Clotrimazol,Antifungal Agents
+CTT,Cefotetan,Cephalosporins (2nd Gen)
+FCA,Fluconazol,Antifungal Agents
+ITR,Itraconazol,Antifungal Agents
+KAN,Kanamycin,Aminoglycosides
+LIN,Lincomycin,Lincosamides
+LOM,Lomefloxacin,Fluoroquinolones
+MNO,Minocyclin,Tetracyclines
+MOL,Moxalactam,Cephalosporins (3rd Gen)
+MTR,Metronidazol,nitroimidazole
+MZL,Mezlocillin,Extended-Spectrum Penicillins
+NEO,Neomycin,Aminoglycosides
+NET,Netilmicin,Aminoglycosides
+NIT,Nitroxolin,Nitrofurans
+NOR,Norfloxacin,Fluoroquinolones
+NOV,Novobiocin,aminocoumarin
+OFX,Ofloxacin,Fluoroquinolones
+PIM,Pipemidsäure,pyridopyrimidine
+PIS,Piperacillin/Sulbactam,Beta-Lactam/Beta-lactamase Inhibitor
+POL,Polymyxin,Polymyxins
+PRI,Pristinamycin,Macrolides
+QPD,Quinupristin/Dalfopristin,Macrolides
+RIB,Rifabutin,Rifamycins
+ROX,Roxithromycin,Macrolides
+TCC,Ticarcillin/clavulanic acid,Beta-Lactam/Beta-lactamase Inhibitor
+TEL,Telithromycin,Macrolides
+TIC,Ticarcillin,Extended-Spectrum Penicillins
+5FC,5-Fluorcytosin,Antifungal Agents
+APL,Apalcillin,Aminopenicillins
+BAC,Bacampicillin,Aminopenicillins
+CAP,Cefapirin,Cephalosporins (2nd Gen)
+CDT,Cefditoren,Cephalosporins (4th Gen)
+CED,Cefradin,Cephalosporins (2nd Gen)
+CEQ,Cefqinom,Cephalosporins (4th Gen)
+CFD,Cefdinir,Cephalosporins (4th Gen)
+CFS,Cefsulodin,Cephalosporins (4th Gen)
+CFT,Cefetamet,Cephalosporins (2nd Gen)
+CIN,Cinoxacin,Fluoroquinolones
+CLO,Cefaloridin,Cephalosporins (2nd Gen)
+CLX,Cloxiquin,Other Classes
+CMD,Cefamandol,Cephalosporins (2nd Gen)
+CMT,Cefmetazol,Cephalosporins (2nd Gen)
+CMX,Cefmenoxim,Cephalosporins (2nd Gen)
+CNI,Cefonicid,Cephalosporins (2nd Gen)
+COM,Cotrimazol,Other Classes
+CPC,Cefpodoxim/clavulanic acid,Beta-Lactam/Beta-lactamase Inhibitor
+CPI,Cefpirom,Cephalosporins (2nd Gen)
+CPR,Capreomycin,Aminoglycosides
+CPY,Cefprozil,Cephalosporins (3rd Gen)
+CPZ,Cefoperazon,Cephalosporins (3rd Gen)
+CRI,Cefatrizin,Cephalosporins (3rd Gen)
+CSE,Cycloserin,Antitubercular Agents
+CTE,Chlortetracyclin,Tetracyclines
+CXC,Cefotaxim/clavulanic acid,Beta-Lactam/Beta-lactamase Inhibitor
+CZC,Ceftazidim/clavulanic acid,Beta-Lactam/Beta-lactamase Inhibitor
+CZD,Cefazedon,Cephalosporins (3rd Gen)
+CZX,Ceftizoxim,Cephalosporins (3rd Gen)
+DAN,Danofloxacin,Fluoroquinolones
+DIC,Dicloxacillin,Antistaphylococcal Penicillins
+DIR,Dirithromycin,Macrolides
+ECO,Econazol,Antifungal Agents
+EMB,Ethambutol,Antimycobacterials
+ENO,Enoxacin,Fluoroquinolones
+ESBL,Extended ß-Lactamase,Antibiotic Resistance Mechanism
+ETH,Ethionamid,Antimycobacterials
+FLE,Fleroxacillin,Beta-Lactam Antibiotics
+FRA,Framycetin,Aminoglycosides
+GAT,Gatifloxacin,Fluoroquinolones
+GEM,Gemifloxacin,Fluoroquinolones
+GRE,Grepafloxacin,Fluoroquinolones
+INH,Isoniazid,Antimycobacterials
+ISE,Isepamicin,Aminoglycosides
+ISO,Isooxazolylpenicillin,Other Classes
+JOS,Josamycin,Macrolides
+KET,Ketoconazol,Antifungal Agents
+KHL,Kanamycin (high level),Aminoglycosides
+LAM,Lampren,Antitubercular Agents
+LMO,Latamofex,Other Classes
+LOR,Loracarbef,Other Classes
+MAR,Marbofloxacin,Fluoroquinolones
+MCL,Mecillinam,Carbapenems
+MCZ,Miconazol,Antifungal Agents
+MET,Methicillin,Antistaphylococcal Penicillins
+MID,Midekamycin,Macrolides
+MZS,Sulbactam/Mezlocillin,Beta-Lactam/Beta-lactamase Inhibitor
+NYS,Nystatin,Antifungal Agents
+OLE,Oleandomycin,Macrolides
+PAN,Panipenem,Carbapenems
+PAR,Paromycin,Aminoglycosides
+PAS,p-Aminosalicylsaeure,Antitubercular Agents
+PEF,Perfloxacin,Fluoroquinolones
+PIV,Pivampicillin,Aminopenicillins
+PTH,Protionamid,Other Classes
+PZA,Pyrazinamid,Antimycobacterials
+ROC,Rocephin,Cephalosporins (3rd Gen)
+ROS,Rosoxacin,Fluoroquinolones
+SAZ,Sulphamethoxazol,Sulfonamides and Folate Pathway Inhibitors
+SFX,Sulfamethizol,Sulfonamides and Folate Pathway Inhibitors
+SIS,Sisomycin,Aminoglycosides
+SLN,Sulfalen,Sulfonamides and Folate Pathway Inhibitors
+SOX,Sulfisoxazol,Sulfonamides and Folate Pathway Inhibitors
+SPF,Sparfloxacin,Fluoroquinolones
+SPM,Spiramycin,Macrolides
+SUL,Sulbactam,Other Classes
+TFX,Trovafloxacin,Fluoroquinolones
+TMO,Temocillin,Other Classes
+TOS,Tosufloxacin,Fluoroquinolones
+VOR,Voriconazol,Antifungal Agents
+CTL,Ceftarolin,Cephalosporins (5th Gen)
+DOR,Doripenem,Carbapenems
+TLV,Telavancin,Glycopeptides and Lipoglycopeptides

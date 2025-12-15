@@ -1,0 +1,100 @@
+{
+  "Fluoroquinolone": [
+    "NOR - Norfloxacin_Tested",
+    "OFX - Ofloxacin_Tested",
+    "LEV - Levofloxacin_Tested",
+    "MOX - Moxifloxacin_Tested",
+    "CIP - Ciprofloxacin_Tested"
+  ],
+  "Aminoglycoside": [
+    "TOB - Tobramycin_Tested",
+    "AMK - Amikacin_Tested",
+    "GEN - Gentamicin_Tested"
+  ],
+  "Penicillin (\u03b2-lactam)": [
+    "FLU - Flucloxacillin_Tested",
+    "MCL - Mecillinam_Tested",
+    "MZL - Mezlocillin_Tested",
+    "PIP - Piperacillin_Tested",
+    "AMX - Amoxicillin_Tested",
+    "OXA - Oxacillin_Tested",
+    "AMP - Ampicillin_Tested"
+  ],
+  "\u03b2-lactam/\u03b2-lactamase inhibitor": [
+    "PIT - Piperacillin/Tazobactam_Tested",
+    "AMS - Ampicillin/Sulbactam_Tested",
+    "AMC - Amoxicillin/clavulanic acid_Tested"
+  ],
+  "Monobactam (\u03b2-lactam)": [
+    "AZT - Aztreonam_Tested"
+  ],
+  "Third-gen cephalosporin (\u03b2-lactam)": [
+    "CPP - Cefpodoxim-Proxetil_Tested",
+    "CFI - Cefixim_Tested",
+    "CRO - Ceftriaxon_Tested",
+    "CAZ - Ceftazidim_Tested",
+    "CTX - Cefotaxim_Tested"
+  ],
+  "Fourth-gen cephalosporin (\u03b2-lactam)": [
+    "CEP - Cefepim_Tested"
+  ],
+  "First-gen cephalosporin (\u03b2-lactam)": [
+    "CEX - Cefalexin_Tested",
+    "CFR - Cefadroxil_Tested",
+    "CEZ - Cefazolin_Tested"
+  ],
+  "Amphenicol": [
+    "CMP - Chloramphenicol_Tested"
+  ],
+  "Tetracycline": [
+    "TET - Tetracyclin_Tested",
+    "DOX - Doxycyclin_Tested"
+  ],
+  "Lincosamide": [
+    "CLI - Clindamycin_Tested"
+  ],
+  "Polymyxin": [
+    "COL - Colistin_Tested"
+  ],
+  "Glycopeptide": [
+    "VAN - Vancomycin_Tested",
+    "TPL - Teicoplanin_Tested"
+  ],
+  "Lipopeptide": [
+    "DPT - Daptomycin_Tested"
+  ],
+  "Second-gen cephalosporin (\u03b2-lactam)": [
+    "CXM - Cefuroxim_Tested",
+    "CEC - Cefaclor_Tested",
+    "COX - Cefoxitin_Tested"
+  ],
+  "Oxazolidinone": [
+    "LIZ - Linezolid_Tested"
+  ],
+  "Macrolide": [
+    "AZM - Azithromycin_Tested",
+    "CLR - Clarithromycin_Tested",
+    "ROX - Roxithromycin_Tested",
+    "ERY - Erythromycin_Tested"
+  ],
+  "Nitrofuran": [
+    "NFT - Nitrofurantoin_Tested"
+  ],
+  "Rifamycin": [
+    "RAM - Rifampicin_Tested"
+  ],
+  "Glycylcycline": [
+    "TGC - Tigecyclin_Tested"
+  ],
+  "Carbapenem (\u03b2-lactam)": [
+    "ERT - Ertapenem_Tested",
+    "IMP - Imipenem_Tested",
+    "MER - Meropenem_Tested"
+  ],
+  "Steroid antibiotic": [
+    "FUS - Fusidic acid_Tested"
+  ],
+  "Dihydrofolate reductase inhibitor": [
+    "TRP - Trimethoprim_Tested"
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "\u03b2-lactam": [
+    "FLU - Flucloxacillin_Tested",
+    "CEX - Cefalexin_Tested",
+    "IMP - Imipenem_Tested",
+    "CEC - Cefaclor_Tested",
+    "PIP - Piperacillin_Tested",
+    "CFR - Cefadroxil_Tested",
+    "CXM - Cefuroxim_Tested",
+    "CAZ - Ceftazidim_Tested",
+    "CEP - Cefepim_Tested",
+    "AMC - Amoxicillin/clavulanic acid_Tested",
+    "AMX - Amoxicillin_Tested",
+    "AZT - Aztreonam_Tested",
+    "CTX - Cefotaxim_Tested",
+    "OXA - Oxacillin_Tested",
+    "PIT - Piperacillin/Tazobactam_Tested",
+    "MER - Meropenem_Tested",
+    "CFI - Cefixim_Tested",
+    "MZL - Mezlocillin_Tested",
+    "AMS - Ampicillin/Sulbactam_Tested",
+    "COX - Cefoxitin_Tested",
+    "ERT - Ertapenem_Tested",
+    "MCL - Mecillinam_Tested",
+    "CEZ - Cefazolin_Tested",
+    "CRO - Ceftriaxon_Tested",
+    "CPP - Cefpodoxim-Proxetil_Tested",
+    "AMP - Ampicillin_Tested"
+  ],
+  "Aminoglycoside": [
+    "TOB - Tobramycin_Tested",
+    "AMK - Amikacin_Tested",
+    "GEN - Gentamicin_Tested"
+  ],
+  "Fluoroquinolone": [
+    "NOR - Norfloxacin_Tested",
+    "OFX - Ofloxacin_Tested",
+    "LEV - Levofloxacin_Tested",
+    "MOX - Moxifloxacin_Tested",
+    "CIP - Ciprofloxacin_Tested"
+  ],
+  "Tetracycline": [
+    "TET - Tetracyclin_Tested",
+    "DOX - Doxycyclin_Tested"
+  ],
+  "Macrolide": [
+    "AZM - Azithromycin_Tested",
+    "CLR - Clarithromycin_Tested",
+    "ROX - Roxithromycin_Tested",
+    "ERY - Erythromycin_Tested"
+  ],
+  "Lincosamide": [
+    "CLI - Clindamycin_Tested"
+  ],
+  "Glycopeptide": [
+    "VAN - Vancomycin_Tested",
+    "TPL - Teicoplanin_Tested"
+  ],
+  "Lipopeptide": [
+    "DPT - Daptomycin_Tested"
+  ],
+  "Oxazolidinone": [
+    "LIZ - Linezolid_Tested"
+  ],
+  "Amphenicol": [
+    "CMP - Chloramphenicol_Tested"
+  ],
+  "Polymyxin": [
+    "COL - Colistin_Tested"
+  ],
+  "Nitrofuran": [
+    "NFT - Nitrofurantoin_Tested"
+  ],
+  "Rifamycin": [
+    "RAM - Rifampicin_Tested"
+  ],
+  "Glycylcycline": [
+    "TGC - Tigecyclin_Tested"
+  ],
+  "Dihydrofolate reductase inhibitor": [
+    "TRP - Trimethoprim_Tested"
+  ],
+  "Steroid antibiotic": [
+    "FUS - Fusidic acid_Tested"
+  ]
+}

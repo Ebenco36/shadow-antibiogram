@@ -1,0 +1,199 @@
+antibiotic_code,canonical_display_name,guideline_weight_0to3,novelty_weight_0to3,notes
+AMC,Amoxicillin/clavulanic acid,2,1,
+AMK,Amikacin,2,1,
+AMP,Ampicillin,2,1,
+AMS,Ampicillin/Sulbactam,2,1,
+AMX,Amoxicillin,2,1,
+AZT,Aztreonam,1,1,
+CAZ,Ceftazidim,2,1,
+CEP,Cefepim,2,2,advanced/serious-infection use
+CEZ,Cefazolin,2,1,
+CIP,Ciprofloxacin,2,1,
+CLI,Clindamycin,2,1,
+CMP,Chloramphenicol,1,1,
+COL,Colistin,2,3,last-resort
+CRO,Ceftriaxon,2,1,
+CTM,Cefotiam,1,1,
+CTX,Cefotaxim,2,1,
+CXM,Cefuroxim,2,1,
+DOX,Doxycyclin,2,1,
+DPT,Daptomycin,2,2,advanced/serious-infection use
+ERT,Ertapenem,2,2,advanced/serious-infection use
+ERY,Erythromycin,2,1,
+FLU,Flucloxacillin,1,1,
+FOS,Fosfomycin,2,0,urinary-focused
+FUS,Fusidic acid,0,0,mostly topical/rare systemic
+GEN,Gentamicin,2,1,
+GHL,Gentamicin 500 (high level),1,1,
+IMP,Imipenem,1,1,
+LEV,Levofloxacin,2,1,
+LIZ,Linezolid,2,2,advanced/serious-infection use
+MER,Meropenem,2,2,advanced/serious-infection use
+MOX,Moxifloxacin,2,1,
+MUP,Mupirocin,0,0,mostly topical/rare systemic
+NFT,Nitrofurantoin,2,0,urinary-focused
+OXA,Oxacillin,1,1,
+PEN,Penicillin,1,1,
+PIP,Piperacillin,1,1,
+PIT,Piperacillin/Tazobactam,2,1,
+RAM,Rifampicin,1,1,
+SHL,Streptomycin 1000 (high level),1,1,
+STR,Streptomycin,1,1,
+SXT,Co-Trimoxazol,2,1,
+TET,Tetracyclin,2,1,
+TGC,Tigecyclin,2,2,advanced/serious-infection use
+TOB,Tobramycin,2,1,
+TPL,Teicoplanin,2,2,
+VAN,Vancomycin,2,2,
+NAL,Nalidixic acid,1,1,
+SLD,Sulfadiazin,1,1,
+TRP,Trimethoprim,2,0,urinary-focused
+APH,Amphotericin B,0,0,antifungal
+AZL,Azlocillin,1,1,
+AZM,Azithromycin,2,1,
+BTC,Bacitracin,0,0,mostly topical/rare systemic
+CAR,Carbenicillin,1,1,
+CAS,Caspofungin,0,0,antifungal
+CEC,Cefaclor,2,1,
+CEX,Cefalexin,2,1,
+CFA,Cefuroxim-Axetil,2,1,
+CFI,Cefixim,2,1,
+CFL,Ceftiofur,1,1,
+CFR,Cefadroxil,2,1,
+CIB,Ceftibuten,1,1,
+CLN,Clinafloxacin,1,1,
+CLR,Clarithromycin,2,1,
+COX,Cefoxitin,1,1,
+CPO,Cefpodoxim,2,2,advanced/serious-infection use
+CPP,Cefpodoxim-Proxetil,2,1,
+CTN,Cefalotin,1,1,
+CTR,Clotrimazol,0,0,antifungal
+CTT,Cefotetan,1,1,
+FCA,Fluconazol,0,0,antifungal
+ITR,Itraconazol,0,0,antifungal
+KAN,Kanamycin,2,1,
+LIN,Lincomycin,2,1,
+LOM,Lomefloxacin,2,1,
+MNO,Minocyclin,2,1,
+MOL,Moxalactam,1,1,
+MTR,Metronidazol,1,1,
+MZL,Mezlocillin,1,1,
+NEO,Neomycin,2,1,
+NET,Netilmicin,2,1,
+NIT,Nitroxolin,2,0,urinary-focused
+NOR,Norfloxacin,2,1,urinary-focused
+NOV,Novobiocin,0,0,mostly topical/rare systemic
+OFX,Ofloxacin,2,1,
+PIM,Pipemidic acid,2,0,urinary-focused
+PIS,Piperacillin/Sulbactam,1,1,
+POL,Polymyxin,0,0,mostly topical/rare systemic
+PRI,Pristinamycin,2,1,mostly topical/rare systemic
+QPD,Quinupristin/Dalfopristin,1,1,
+RIB,Rifabutin,1,1,
+ROX,Roxithromycin,2,1,mostly topical/rare systemic
+SONST,Other antibiotic,1,1,
+TCC,Ticarcillin/clavulanic acid,1,1,
+TEL,Telithromycin,2,1,mostly topical/rare systemic
+TIC,Ticarcillin,1,1,
+5FC,5-Fluorcytosin,0,0,antifungal
+APL,Apalcillin,1,1,
+BAC,Bacampicillin,1,1,
+CAP,Cefapirin,1,1,
+CDT,Cefditoren,1,1,
+CED,Cefradin,1,1,
+CEQ,Cefqinom,1,1,
+CFD,Cefdinir,1,1,
+CFS,Cefsulodin,1,1,
+CFT,Cefetamet,1,1,
+CIN,Cinoxacin,2,0,urinary-focused
+CLO,Cefaloridin,1,1,
+CLX,Cloxiquin,1,1,
+CMD,Cefamandol,1,1,
+CMT,Cefmetazol,1,1,
+CMX,Cefmenoxim,1,1,
+CNI,Cefonicid,1,1,
+COM,Cotrimazol,0,0,antifungal
+CPC,Cefpodoxim/clavulanic acid,1,1,
+CPI,Cefpirom,2,2,advanced/serious-infection use
+CPR,Capreomycin,0,0,TB-specific
+CPY,Cefprozil,1,1,
+CPZ,Cefoperazon,1,1,
+CRI,Cefatrizin,1,1,
+CSE,Cycloserin,0,0,TB-specific
+CTE,Chlortetracyclin,1,1,
+CXC,Cefotaxim/clavulanic acid,1,1,
+CZC,Ceftazidim/clavulanic acid,1,1,
+CZD,Cefazedon,1,1,
+CZX,Ceftizoxim,1,1,
+DAN,Danofloxacin,1,1,
+DIC,Dicloxacillin,1,1,
+DIR,Dirithromycin,2,1,mostly topical/rare systemic
+ECO,Econazol,0,0,antifungal
+EMB,Ethambutol,0,0,TB-specific
+ENO,Enoxacin,2,1,
+ESBL,Extended ß-Lactamase,1,1,
+ETH,Ethionamid,0,0,TB-specific
+FLE,Fleroxacillin,1,1,
+FRA,Framycetin,1,1,
+GAT,Gatifloxacin,2,1,
+GEM,Gemifloxacin,2,1,
+GRE,Grepafloxacin,2,1,
+INH,Isoniazid,0,0,TB-specific
+ISE,Isepamicin,2,1,
+ISO,Isooxazolylpenicillin,1,1,
+JOS,Josamycin,2,1,mostly topical/rare systemic
+KET,Ketoconazol,0,0,antifungal
+KHL,Kanamycin (high level),1,1,
+LAM,Lampren,1,1,
+LMO,Latamofex,1,1,
+LOR,Loracarbef,1,1,
+MAR,Marbofloxacin,2,1,
+MCL,Mecillinam,1,1,
+MCZ,Miconazol,0,0,antifungal
+MET,Methicillin,1,1,
+MID,Midekamycin,2,1,mostly topical/rare systemic
+MZS,Sulbactam/Mezlocillin,1,1,
+NYS,Nystatin,0,0,antifungal
+OLE,Oleandomycin,0,0,mostly topical/rare systemic
+PAN,Panipenem,1,1,
+PAR,Paromycin,1,1,
+PAS,p-Aminosalicylic acid,0,0,TB-specific
+PEF,Perfloxacin,1,1,
+PIV,Pivampicillin,1,1,
+PTH,Protionamid,0,0,TB-specific
+PZA,Pyrazinamid,0,0,TB-specific
+ROC,Rocephin,1,1,
+ROS,Rosoxacin,1,1,
+SAZ,Sulphamethoxazol,1,1,
+SFX,Sulfamethizol,1,1,
+SIS,Sisomycin,2,1,
+SLN,Sulfalen,1,1,
+SOX,Sulfisoxazol,1,1,
+SPF,Sparfloxacin,2,1,
+SPM,Spiramycin,2,1,mostly topical/rare systemic
+SUL,Sulbactam,1,1,
+TFX,Trovafloxacin,2,1,
+TMO,Temocillin,1,1,
+TOS,Tosufloxacin,2,1,
+VOR,Voriconazol,0,0,antifungal
+CTL,Ceftarolin,2,3,reserve/novel
+DOR,Doripenem,2,2,advanced/serious-infection use
+TLV,Telavancin,2,3,reserve/novel
+CZA,Ceftazidim/Avibactam,2,3,reserve/novel
+CZT,Ceftolozan/Tazobactam,2,3,reserve/novel
+ORI,Oritavancin,2,3,reserve/novel
+BPR,Ceftobiprol,2,3,reserve/novel
+DAL,Dalbavancin,2,3,reserve/novel
+TZD,Tedizolid,2,3,reserve/novel
+MIC,Micafungin,0,0,antifungal
+SPC,Spectinomycin,1,1,
+ANI,Anidulafungin,0,0,antifungal
+IVC,Isavuconazol,0,0,antifungal
+POS,Posaconazol,0,0,antifungal
+FID,Fidaxomicin,1,1,
+OMA,Omadacyclin,2,3,reserve/novel
+CCO,Cefiderocol,2,3,reserve/novel
+PLA,Plazomicin,2,3,reserve/novel
+DEL,Delafloxacin,2,3,reserve/novel
+LEF,Lefamulin,2,3,reserve/novel
+PIC,Pivmecillinam,2,0,urinary-focused

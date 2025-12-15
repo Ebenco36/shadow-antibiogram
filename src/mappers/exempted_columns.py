@@ -1,0 +1,20 @@
+columns_to_exempt = [
+    "AMIGLYK (AMK, GEN, STR, TOB) - Aminoglykoside",
+    "AMIPENBET (AMC, AMS) - Penicilline inkl. Beta-Lactamase-Inhibitoren",
+    "AMIPEN (AMP, AMX) - Penicilline",
+    "CEP3 (CAZ, CRO, CTX) - Cephalosporine der 3. Generation",
+    "TETCYP (DOX, TET) - Tetracycline",
+    "CARPEN (ERT, IMP, MER) - Carbapeneme",
+    "CARPENK (IMP, MER) - Carbapeneme",
+    "FLUCHI (CIP, LEV, MOX) - Fluorchinolone",
+    "C-CARB - sonstige Carbapenemase nachgewiesen",
+    "C-KPC-2 - KPC-2 nachgewiesen",
+    "C-KPC-3 - KPC-3 nachgewiesen",
+    "C-NDM-1 - NDM-1 nachgewiesen",
+    "C-OXA-23 - OXA-23 nachgewiesen",
+    "C-OXA-48 - OXA-48 nachgewiesen",
+    "C-OXA-58 - OXA-58 nachgewiesen",
+    "C-OXA-72 - OXA-72 nachgewiesen",
+    "C-VIM-1 - VIM-1 nachgewiesen",
+    "C-VIM-2 - VIM-2 nachgewiesen"
+]
