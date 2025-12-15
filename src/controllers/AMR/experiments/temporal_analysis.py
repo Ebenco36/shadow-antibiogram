@@ -68,11 +68,11 @@ import plotly.graph_objects as go
 # GLOBAL FIXED COLORS
 # -----------------------------
 PARTICIPATION_COLORS = {
-    "continuous":   "#66c2a5",  # greenish teal
-    "entering":     "#fc8d62",  # orange
-    "single_year":  "#e78ac3",  # pink
-    "leaving":      "#8da0cb",  # blue-purple
-    "intermittent": "#a6d854",  # light green-yellow
+    "continuous":   "#1b9e77",  # darker teal (dominant, stable base)
+    "entering":     "#d95f02",  # darker orange
+    "single_year":  "#7570b3",  # purple (distinct from pink/blue)
+    "intermittent": "#e6ab02",  # mustard / yellow-orange
+    "leaving":      "#666666",  # neutral dark gray
 }
 
 def _style_pub_layout(

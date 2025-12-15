@@ -31,7 +31,7 @@ All commands below assume execution from the repository root directory.
 The dataset used in this study is publicly available via **Zenodo**.
 
 **Zenodo record**
-DOI: `10.5281/zenodo.XXXXXXX`
+DOI: `10.5281/zenodo.17939410`
 File: `WHO_Aware_data.zip`
 
 The archive contains preprocessed antimicrobial susceptibility testing metadata required to reproduce all analyses reported in the manuscript. No patient-identifiable data are included.
@@ -43,7 +43,7 @@ From the repository root directory:
 ```bash
 mkdir -p datasets && \
 wget -O datasets/WHO_Aware_data.zip \
-https://zenodo.org/record/XXXXXXX/files/WHO_Aware_data.zip && \
+"https://zenodo.org/record/17939410/files/WHO_Aware_data.zip" && \
 unzip datasets/WHO_Aware_data.zip -d datasets/ && \
 rm datasets/WHO_Aware_data.zip
 ```
@@ -53,7 +53,7 @@ Alternatively, using `curl`:
 ```bash
 mkdir -p datasets && \
 curl -L -o datasets/WHO_Aware_data.zip \
-https://zenodo.org/record/XXXXXXX/files/WHO_Aware_data.zip && \
+"https://zenodo.org/record/17939410/files/WHO_Aware_data.zip" && \
 unzip datasets/WHO_Aware_data.zip -d datasets/ && \
 rm datasets/WHO_Aware_data.zip
 ```
