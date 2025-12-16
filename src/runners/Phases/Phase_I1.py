@@ -258,7 +258,8 @@ class VisualAnalyticsPipeline:
                 class_names_str = " & ".join(task["aware_classes"])
                 title = task["title_template"].format(class_names_str)
                 output_path = output_root / section_folder / self._safe_filename(title)
-                
+                # Ensure directory exists for both CSV and figures
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 # --- 3. Generate one plot with the combined list ---
                 self._generate_boxplot(
                     filtered_df, 

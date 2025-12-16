@@ -1149,7 +1149,6 @@ def plot_tests_boxplot(
     export_csv_path: Optional[str] = None,
     min_group_size: int = 1,
     box_color: str = "#5580B0",
-    point_color: str = "black",           # (kept for API compatibility)
     outlier_color: str = "crimson",
     show_outliers: bool = False,
     # "outliers" | "suspectedoutliers" | "all" | False

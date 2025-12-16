@@ -304,6 +304,10 @@ class AMRTestingPatternAnalysis:
                 stroke=None  # No border
             )
         )
+        # Force x-axis slant when horizontal
+        if orientation == "horizontal":
+            chart = chart.configure_axisX(labelAngle=45)
+
 
         os.makedirs(self.charts_dir + "/" + extra_dir_to_save, exist_ok=True)
         if save_as_html:

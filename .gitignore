@@ -134,7 +134,7 @@ src/notes.txt
 src/controllers/deep_learning/
 src/controllers/ReferenceList
 
-datasets/antibiotic_class.json
+# datasets/antibiotic_class.json
 # datasets/antibiotic_class_grouping.json
 datasets/antibiotic_groups_by_grams.csv
 datasets/antibiotic_testing_summary.csv
