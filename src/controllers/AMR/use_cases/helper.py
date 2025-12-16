@@ -150,10 +150,40 @@ def build_and_save_network_for_cohort(
             # If label creation fails, just keep original antibiotic names
             label_map = None
 
+    AWARE_PALETTE = {
+        "Access":  "#56B4E9",
+        "Watch":   "#E69F00",
+        "Reserve": "#D55E00",
+        "Unknown": "#999999",
+    }
+    from src.runners.Phases.Phase_I2 import build_who_map
+    who_map = build_who_map()
+    
+    def _norm_aware(cls: str) -> str:
+        s = str(cls).strip()
+        # robust normalization (handles "access", "ACCESS", "Access ")
+        s_low = s.lower()
+        if s_low == "access":  return "Access"
+        if s_low == "watch":   return "Watch"
+        if s_low == "reserve": return "Reserve"
+        return "Unknown"
+
     if label_map:
         sim_for_viz = similarity_matrix.rename(index=label_map, columns=label_map)
+        # 2) build color map in the *display-label space*
+        aware_color_map = {}
+        for raw_abx, cls in who_map.items():
+            disp = label_map.get(raw_abx)  # e.g. "AMS"
+            if disp is None:
+                continue
+            aware_color_map[disp] = AWARE_PALETTE.get(_norm_aware(cls), AWARE_PALETTE["Unknown"])
     else:
         sim_for_viz = similarity_matrix
+        aware_color_map = {
+            raw_abx: AWARE_PALETTE.get(_norm_aware(cls), AWARE_PALETTE["Unknown"])
+            for raw_abx, cls in who_map.items()
+        }
+
 
     # 7) Visualize & save
     visualize_antibiotic_network(
@@ -165,8 +195,11 @@ def build_and_save_network_for_cohort(
         output_image=png_name,
         output_pdf=pdf_name,
         gexf_path=gexf_name,
-        title=title,
+        title=None,
         remove_isolated=False,
+        semantic_color_map=aware_color_map,
+        node_color_mode="semantic",
+
     )
 
 

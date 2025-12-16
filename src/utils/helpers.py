@@ -1,34 +1,22 @@
-from src.controllers.summary.ASTPanelBreadthAnalyzer import _plotly_pub_layout
-from src.mappers.antibiotic_to_grams import ABX_TARGET_MAP, CATALOG
-import textwrap
-import json
-import re
-from typing import Mapping
-import pandas as pd
-import numpy as np
 import os
 import math
+import json
+import textwrap
+import numpy as np
+import pandas as pd
 import altair as alt
 import networkx as nx
 from pathlib import Path
-import plotly.graph_objects as go
-from scipy.cluster.hierarchy import linkage, dendrogram, to_tree
-from scipy.spatial.distance import pdist
-from typing import (Callable, Dict, Iterable, List, Literal, Optional, Sequence, Tuple,
-                    Union, Mapping, ClassVar, Any)
-import io
-# import community as community_louvain
+from typing import Mapping
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import matplotlib.colors as mcolors
-from matplotlib.patches import Ellipse
-from src.controllers.summary.AntibioticCoverageSummary import AntibioticCoverageSummary
+from scipy.spatial.distance import pdist
 from src.utils.LoadClasses import LoadClasses
-from src.mappers.pathogen_genus import (
-    pathogen_genus_critical, pathogen_genus_high,
-    pathogen_genus_medium, pathogen_genus_other
-)
 from src.utils.network import visualize_antibiotic_network
-from matplotlib import patheffects as pe
+from scipy.cluster.hierarchy import linkage, dendrogram, to_tree
+from src.mappers.antibiotic_to_grams import ABX_TARGET_MAP, CATALOG
+from typing import (Dict, List, Optional, Sequence, Tuple, Union, Mapping, Any)
 
 try:
     from pyvis.network import Network
@@ -96,57 +84,6 @@ def build_broad_class_map(load: LoadClasses, df: pd.DataFrame, broad_names: List
             out[broad] = cols
 
     return out
-
-
-# def merge_antibiotic_data(existing_file, who_file, output_file):
-#     """
-#     Merges an existing antibiotic classification dataset with WHO classification data.
-#     Ensures case-insensitive matching and fills missing WHO data with 'Not Set',
-#     while keeping column names unchanged.
-
-#     :param existing_file: Path to the existing dataset CSV file.
-#     :param who_file: Path to the WHO classification CSV file.
-#     :param output_file: Path to save the merged dataset CSV file.
-#     """
-
-#     # Load the datasets
-#     existing_df = pd.read_csv(existing_file)
-#     who_df = pd.read_csv(who_file)
-
-#     # Ensure case-insensitive antibiotic name matching without changing column case
-#     existing_df['Antibiotic Name'] = existing_df['Antibiotic Name'].str.lower()
-#     who_df['Antibiotic'] = who_df['Antibiotic'].str.lower()
-
-#     # Merge datasets
-#     merged_df = pd.merge(
-#         existing_df,
-#         who_df,
-#         left_on="Antibiotic Name",
-#         right_on="Antibiotic",
-#         how="left"
-#     )
-
-#     # Drop the redundant 'Antibiotic' column from WHO data
-#     merged_df.drop(columns=["Antibiotic"], inplace=True)
-
-#     # Identify WHO columns dynamically (excluding 'Antibiotic' which was merged on)
-#     who_columns = [col for col in who_df.columns if col != "Antibiotic"]
-
-#     # Verify if all WHO columns exist in merged_df before filling NaN values
-#     existing_columns = set(merged_df.columns)
-#     # Ensure they exist
-#     who_columns = [col for col in who_columns if col in existing_columns]
-
-#     # Fill missing values in WHO columns only
-#     merged_df[who_columns] = merged_df[who_columns].fillna("Not Set")
-
-#     # Restore original casing of 'Antibiotic Name'
-#     merged_df['Antibiotic Name'] = existing_df['Antibiotic Name']
-
-#     # Save the enriched dataset
-#     merged_df.to_csv(output_file, index=False)
-
-#     print(f"Merged dataset saved to {output_file}")
 
 def merge_antibiotic_data(
     existing_file: str,
@@ -235,7 +172,6 @@ def merge_antibiotic_data(
     merged_df.to_csv(output_file, index=False)
     print(f"Merged dataset with broad class saved to {output_file}")
 
-
 def compute_row_features(row, antibiotics, class_map, who_class_map):
     """
     Uses the *_Tested flags for each antibiotic to avoid mutating raw R/I/S values.
@@ -249,7 +185,6 @@ def compute_row_features(row, antibiotics, class_map, who_class_map):
     is_reserve  = int(any(cls == 'Reserve' for cls in who_flags))
 
     return pd.Series([num_classes, is_critical, is_reserve])
-
 
 def prepare_feature_inputs(ars_data: pd.DataFrame, who_data: pd.DataFrame):
     """
@@ -507,55 +442,6 @@ def _col_dendrogram(seg_df, node_df, n_cols, colHover, colSelect, panel_height, 
         x=alt.X('pos:Q', scale=xscale), y='height:Q'
     ).transform_filter(colSelect)
     return (lines+pts+hover+select).properties(height=panel_height)
-
-
-def _derive_color_domain_from_data(
-    melted_df: pd.DataFrame,
-    *,
-    value_col: str = 'similarity',
-    exclude_diag: bool = True,
-    row_field: str = 'source',
-    col_field: str = 'target',
-    low_quantile: float = 0.0,
-    high_quantile: float = 1.0,
-    n_stops: int = 7
-):
-    data = melted_df
-    if exclude_diag and row_field in data and col_field in data:
-        data = data.loc[data[row_field] != data[col_field]]
-
-    vals = pd.to_numeric(data[value_col], errors='coerce').dropna()
-    if vals.empty:
-        return [0.0, 1.0], (0.0, 1.0)
-
-    lo = float(vals.quantile(low_quantile))
-    hi = float(vals.quantile(high_quantile))
-    if lo == hi:
-        hi = lo + 1e-9
-    domain = [float(x) for x in np.linspace(lo, hi, n_stops)]
-    return domain, (float(vals.min()), float(vals.max()))
-
-
-def _white_blue_palette(n: int = 7):
-    anchors = np.array([
-        [255, 255, 255],
-        [242, 247, 255],
-        [206, 225, 255],
-        [160, 196, 250],
-        [115, 165, 242],
-        [63, 123, 223],
-        [11, 79, 179],
-    ], dtype=float)
-    if n <= len(anchors):
-        arr = anchors[np.linspace(0, len(anchors)-1, n).round().astype(int)]
-    else:
-        xs = np.linspace(0, 1, len(anchors))
-        xi = np.linspace(0, 1, n)
-        arr = np.column_stack([
-            np.interp(xi, xs, anchors[:, c]) for c in range(3)
-        ])
-    return ["#{:02x}{:02x}{:02x}".format(*map(int, row)) for row in arr]
-
 
 # ----------------------------------------------------------------------
 # Full clustergram
@@ -881,248 +767,6 @@ def plot_clustergram_with_dendrograms(
             .properties(title=title)
             .resolve_scale(color='independent', y='independent')
             .configure_title(fontSize=18, anchor='middle'))
-
-
-def visualize_grid_network(
-    data_dict,
-    threshold=0.3,
-    output_dir=".",
-    output_image="network_grid.png",
-    generate_html=True,
-    html_filename_prefix="network",
-    line_width_multiplier=5,
-    main_title="Antibiotic Co-testing Networks by Group",
-    main_title_color="black",
-    subplot_title_color="black",
-    # static (matplotlib) background
-    bgcolor_static="white",
-    # HTML styling (white background, black text)
-    bgcolor_html="white",
-    font_color_html="black",
-    # HTML node/edge visibility
-    html_node_border_color="black",
-    html_edge_color="gray",
-    html_edge_highlight_color="red",
-    html_label_font_size=16,
-):
-    """
-    Visualizes multiple stratified network graphs, creating a 2xN grid image
-    and individual interactive HTML files for each network.
-
-    Args:
-        data_dict (dict[str -> pd.DataFrame]): keys are group names (e.g., pathogen),
-            values are Jaccard index DataFrames (square, index=columns).
-        threshold (float): Jaccard cutoff to include an edge.
-        output_dir (str): Where to save outputs.
-        output_image (str): Filename for the static grid image.
-        generate_html (bool): If True, writes an HTML per group.
-        html_filename_prefix (str): Prefix for HTML files.
-        line_width_multiplier (float): Scales edge widths in static plots.
-        main_title (str): Title for the grid figure.
-        *_color/_html params: Styling for white theme and legibility.
-    """
-    os.makedirs(output_dir, exist_ok=True)
-    image_path = os.path.join(output_dir, output_image)
-
-    groups = list(data_dict.keys())
-    num_groups = len(groups)
-    if num_groups == 0:
-        print("Warning: No data provided in the dictionary.")
-        return
-
-    # --- Figure (static) setup: white background, black text
-    cols = 2
-    rows = math.ceil(num_groups / cols)
-    fig, axes = plt.subplots(rows, cols, figsize=(10 * cols, 8 * rows))
-    fig.suptitle(main_title, fontsize=24, y=1.02, color=main_title_color)
-    fig.patch.set_facecolor(bgcolor_static)
-
-    if num_groups == 1:
-        axes = np.array([axes])
-    axes = axes.flatten()
-
-    # palette for community colors (visible on white)
-    palette_names = ['deepskyblue', 'orange', 'limegreen', 'gold',
-                     'violet', 'tomato', 'cyan', 'magenta', 'dodgerblue',
-                     'darkorange', 'mediumseagreen', 'goldenrod']
-    base_colors = [mcolors.CSS4_COLORS[name] for name in palette_names]
-
-    for i, group_name in enumerate(groups):
-        ax = axes[i]
-        df = data_dict[group_name]
-
-        safe_group_name = "".join(c for c in group_name if c.isalnum() or c in (
-            ' ', '_')).rstrip().replace(' ', '_')
-        print(f"--- Processing group: {group_name} ---")
-
-        # --- Build graph for group ---
-        links = df.stack().reset_index()
-        links.columns = ['source', 'target', 'value']
-        links = links[(links['source'] != links['target'])
-                      & (links['value'] > threshold)]
-        G = nx.from_pandas_edgelist(links, 'source', 'target', ['value'])
-
-        if G.number_of_nodes() == 0:
-            ax.set_title(f"{group_name}\n(No connections at threshold {threshold})",
-                         fontsize=16, color=subplot_title_color)
-            ax.text(0.5, 0.5, f"{group_name}\n(No connections at threshold {threshold})",
-                    ha='center', va='center', fontsize=14, color=subplot_title_color)
-            ax.axis('off')
-            print(f"Skipping {group_name} due to no connections.")
-            continue
-
-        # --- Analysis ---
-        partition = community_louvain.best_partition(G, weight='value')
-        degree_centrality = nx.degree_centrality(G)
-
-        for node in G.nodes():
-            G.nodes[node]['size'] = degree_centrality.get(node, 0) * 50 + 10
-            G.nodes[node]['group'] = partition[node]
-            G.nodes[node]['title'] = (f"Antibiotic: {node}\n"
-                                      f"Community: {partition[node]}\n"
-                                      f"Degree: {G.degree[node]}")
-
-        # --- HTML (white theme, bold/black labels, strong contrast) ---
-        if generate_html:
-            html_filename = f"{html_filename_prefix}_{safe_group_name}.html"
-            html_path = os.path.join(output_dir, html_filename)
-            print(f"Generating interactive HTML: '{html_path}'")
-
-            net = Network(
-                notebook=True,
-                height='800px',
-                width='100%',
-                bgcolor=bgcolor_html,     # white
-                font_color=font_color_html,  # black
-                heading=f"{group_name} Network"
-            )
-            net.from_nx(G)
-
-            # Apply community colors per node for HTML
-            for n in net.nodes:
-                grp = partition[n['id']]
-                color = base_colors[grp % len(base_colors)]
-                n['color'] = {
-                    'background': color,
-                    'border': html_node_border_color,
-                    'highlight': {'background': color, 'border': 'red'}
-                }
-                # Make labels bigger & bold-ish
-                n['font'] = {'size': html_label_font_size,
-                             'bold': True, 'color': font_color_html}
-                # Optional: thicker node outline for visibility
-                n['borderWidth'] = 2
-
-            # Edge styling for visibility on white
-            for e in net.edges:
-                e['color'] = {'color': html_edge_color,
-                              'highlight': html_edge_highlight_color}
-                e['width'] = max(1.0, float(e.get('value', 1.0)) * 3.0)
-                e['smooth'] = {'type': 'continuous'}  # cleaner on dense graphs
-
-            # Physics layout tuned for breathing room
-            net.force_atlas_2based(gravity=-50, central_gravity=0.01,
-                                   spring_length=120, spring_strength=0.08, damping=0.4, overlap=0)
-
-            try:
-                net.save_graph(html_path)
-            except Exception as e:
-                print(f" ↳ Error saving HTML file for {group_name}: {e}")
-
-        # --- Static subplot (on white) ---
-        print(f"Drawing static plot for {group_name}...")
-        node_sizes_plt = [data['size'] * 2 for _, data in G.nodes(data=True)]
-        community_colors = [base_colors[partition[n] %
-                                        len(base_colors)] for n in G.nodes()]
-
-        # Spaced layout so colors/edges are clear on white
-        pos = nx.spring_layout(G, k=3, iterations=100,
-                               weight='value', scale=10.0)
-
-        nx.draw_networkx_edges(
-            G, pos, ax=ax, alpha=0.6,
-            width=[d['value'] * line_width_multiplier for _,
-                   _, d in G.edges(data=True)],
-            edge_color='gray'
-        )
-        nx.draw_networkx_nodes(
-            G, pos, ax=ax, node_color=community_colors,
-            node_size=node_sizes_plt,
-            edgecolors='black', linewidths=0.7
-        )
-        nx.draw_networkx_labels(
-            G, pos, ax=ax, font_size=10, font_color='black', font_weight='bold'
-        )
-
-        ax.set_title(group_name, fontsize=16, color=subplot_title_color)
-        ax.axis('off')
-
-    # Hide any unused subplots
-    for j in range(num_groups, len(axes)):
-        axes[j].axis('off')
-
-    plt.tight_layout(rect=[0, 0, 1, 0.98])
-
-    try:
-        plt.savefig(image_path, format=output_image.split(
-            '.')[-1], bbox_inches='tight', dpi=300)
-        print(f"\nSuccessfully saved grid image to '{image_path}'")
-    except Exception as e:
-        print(f"\nError saving grid image file: {e}")
-
-    plt.close()
-
-
-########################## BOX PLOT IMPLEMENTATION FOR DISPARITY ##########################
-
-
-# ==============================================================================
-# Saving: Plotly (HTML always; PNG/SVG/PDF if kaleido is installed)
-# ==============================================================================
-
-
-def _save_plotly(fig: go.Figure, base_path: Path,
-                 formats: Iterable[str] = ("html", "png"),
-                 image_scale: int = 3) -> List[str]:
-    saved = []
-    fmts = [f.lower() for f in formats]
-
-    # Always HTML
-    if "html" in fmts:
-        fig.write_html(f"{base_path}.html",
-                       include_plotlyjs="cdn", full_html=True)
-        saved.append(str(f"{base_path}.html"))
-
-    # Static images (kaleido)
-    for fmt in fmts:
-        if fmt in ("png", "svg", "pdf"):
-            try:
-                fig.write_image(f"{base_path}.{fmt}", scale=image_scale)
-                saved.append(str(f"{base_path}.{fmt}"))
-            except Exception as e:
-                print(f"[hint] Could not write {fmt} for {base_path.name}: {e}\n"
-                      f"       → Install kaleido: pip install -U kaleido")
-    return saved
-
-
-def _wrap_html(text: str, width: int) -> str:
-    """Word-wrap a string and join lines with <br> for Plotly titles."""
-    if not text:
-        return ""
-    lines = textwrap.wrap(
-        text, width=width, break_long_words=False, replace_whitespace=False)
-    return "<br>".join(lines)
-
-
-def build_title_with_question(base: str, question: str,
-                              base_width: int = 55,
-                              q_width: int = 70,
-                              q_scale: float = 0.9) -> str:
-    """Compose a multi-line Plotly title with wrapped base + smaller wrapped question."""
-    base_wrapped = _wrap_html(base, base_width)
-    q_wrapped = _wrap_html(f"Q: {question}", q_width)
-    q_wrapped = f"<span style='font-size:{int(q_scale*100)}%'>{q_wrapped}</span>"
-    return f"{base_wrapped}<br>{q_wrapped}"
 
 
 def plot_tests_boxplot(
@@ -1470,7 +1114,7 @@ def plot_tests_boxplot(
                     fig.add_annotation(
                         x=class_midpoints[cls], y=1.06, xref="x", yref="paper",
                         text=f"<b>{cls} Antibiotics</b>", showarrow=False,
-                        font=dict(color=class_palette.get(cls, "#888888"), size=14, family="Arial"),
+                        font=dict(color=class_palette.get(cls, "#888888"), size=18, family="Arial"),
                         align="center"
                     )
                 
@@ -1583,865 +1227,73 @@ def plot_tests_boxplot(
                     ))
                 except ValueError:
                     pass
+    
+    # fig.update_layout(
+    #     title=dict(
+    #         text=(title or "").replace("\n", "<br>"),
+    #         x=0.5,
+    #         y=0.98,
+    #         font=dict(size=28, family="Arial", color="black")
+    #     ),
+    #     xaxis_title=xaxis_title,
+    #     yaxis_title=ylabel,
+    #     width=width,
+    #     height=height,
+    #     margin=dict(t=120),
+    #     paper_bgcolor="white",
+    #     plot_bgcolor="white",
+    #     legend_title_text="Legend",
+    #     legend=dict(
+    #         **legend,
+    #         font=dict(size=18),
+    #         title=dict(font=dict(size=20)),
+    #         y=legend.get("y", -0.25) - 0.08,
+    #     )
+    # )
+    
+    
+    # Make a safe copy of legend and adjust y
+    legend_cfg = dict(legend)
+    legend_cfg["y"] = legend_cfg.get("y", -0.25) - 0.70  # move legend down
 
-    # layout
     fig.update_layout(
-        title=dict(text=(title or "").replace("\n", "<br>"), x=0.5, y=0.98),
+        title=dict(
+            text=(title or "").replace("\n", "<br>"),
+            x=0.5,
+            y=0.98,
+            font=dict(size=28, family="Arial", color="black")
+        ),
         xaxis_title=xaxis_title,
         yaxis_title=ylabel,
-        width=width, height=height,
-        margin=dict(t=110),
-        paper_bgcolor="white", plot_bgcolor="white",
+        width=width,
+        height=height,
+        margin=dict(t=120),
+        paper_bgcolor="white",
+        plot_bgcolor="white",
         legend_title_text="Legend",
-        legend=legend
+        legend=dict(
+            **legend_cfg,
+            font=dict(size=18),
+            title=dict(font=dict(size=20)),
+        )
     )
-    fig.update_xaxes(tickangle=45, categoryorder="array",
-                     categoryarray=new_order, automargin=True)
-    fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="LightGrey",
-                     range=yaxis_range, rangemode="tozero" if yaxis_range is None else "normal")
 
-    return fig
-
-
-
-def plot_tests_grouped_bar(
-    test_data_df,
-    # --- axis/semantics ---
-    antibiotic_col: str = "Antibiotic",
-    group_col: Optional[str] = "Bundesland",      # primary comparison (color). Can be None.
-    compare_col: Optional[str] = None,            # secondary comparison (pattern). Can be None.
-
-    group_include: Optional[List[str]] = None,
-    group_exclude: Optional[List[str]] = None,
-    compare_include: Optional[List[str]] = None,
-    compare_exclude: Optional[List[str]] = None,
-    
-    # --- inputs & filtering ---
-    antibiotic_classes: Optional[Dict[str, List[str]]] = None,  # if set → class-level bars
-    antibiotics_to_plot: Optional[List[str]] = None,             # subset raw *_Tested columns
-    antibiotic_class_map: Optional[Dict[str, str]] = None,       # raw *_Tested -> {"Access","Watch","Reserve","Unknown"}
-    aware_filter: Optional[Tuple[str, ...]] = None,              # keep only these AWaRe classes (antibiotic-level only)
-
-    # --- ordering & presentation ---
-    sort_stat: str = "mean",                     # "mean" or "median" for ordering within blocks
-    top_n: Optional[int] = 25,                   # None = keep all after filtering
-    xaxis_label_format: str = "full",            # "full" | "abbr" | "both" for antibiotic labels
-
-    # --- cutoff & layout ---
-    show_cutoff: bool = True,
-    cutoff_value: float = 60.0,
-    cutoff_label: str = "Access target: 60%",
-    cutoff_dash: str = "dash",
-    width: int = 1300,
-    height: int = 520,
-    legend: dict = dict(orientation="h", yanchor="top", y=-0.22, xanchor="center", x=0.5),
-
-    # --- styling ---
-    group_palette: Optional[Dict[str, str]] = None,  # maps group_col values -> color
-    pattern_map: Optional[Dict[str, str]] = None,    # maps compare_col values -> pattern
-    class_palette: Optional[Dict[str, str]] = None,  # AWaRe header text colors
-    bar_colors: Optional[List[str]] = None,          # convenience: list of hex colors; cycles over groups
-    show_values: bool = False,
-    value_decimals: int = 1,
-    title: str = "Antibiotic test coverage by group (grouped bars)",
-    yaxis_range: Optional[Tuple[float, float]] = (0, 100),
-    tested_suffix: str = "_Tested",
-) -> go.Figure:
-    """
-    Build a publication-ready grouped bar chart for AST test coverage.
-
-    Robust to:
-      - group_col=None (no color grouping)
-      - compare_col=None (no pattern grouping)
-      - both present (color = group_col, pattern = compare_col)
-      - class mode (antibiotic_classes) or antibiotic mode (per *_Tested column)
-
-    Coverage definition:
-      CoveragePct = (# rows where indicator == 1) / (total rows) * 100
-      (computed per group / compare / antibiotic (or class)).
-
-    AWaRe blocks:
-      In antibiotic-level mode, bars are arranged in contiguous AWaRe blocks
-      (Access → Watch → Reserve → Unknown), sorted within each block by `sort_stat`.
-    """
-
-    # -------------------- load & basic checks --------------------
-    df = pd.read_csv(test_data_df) if isinstance(test_data_df, str) else test_data_df.copy()
-    if df.empty:
-        raise ValueError("test_data_df is empty.")
-
-    # Validate requested columns if present
-    for req in [group_col] + ([compare_col] if compare_col else []):
-        if req and req not in df.columns:
-            raise KeyError(f"Column '{req}' not found in dataframe.")
-
-    # -------- APPLY SUBSET FILTERS BEFORE MELT --------
-    if group_col:
-        if group_include:
-            df = df[df[group_col].isin(group_include)].copy()
-        if group_exclude:
-            df = df[~df[group_col].isin(group_exclude)].copy()
-    if compare_col:
-        if compare_include:
-            df = df[df[compare_col].isin(compare_include)].copy()
-        if compare_exclude:
-            df = df[~df[compare_col].isin(compare_exclude)].copy()
-
-    if class_palette is None:
-        class_palette = {"Access": "#56B4E9", "Watch": "#E69F00", "Reserve": "#D55E00", "Unknown": "#999999"}
-
-    indicator_cols = [c for c in df.columns if c.endswith(tested_suffix)]
-    if antibiotics_to_plot:
-        indicator_cols = [c for c in indicator_cols if c in set(antibiotics_to_plot)]
-        if not indicator_cols:
-            raise ValueError("No antibiotic columns remain after filtering.")
-
-    # Prepare id_vars for melt (omit None)
-    id_vars = []
-    if group_col:   id_vars.append(group_col)
-    if compare_col: id_vars.append(compare_col)
-
-    long_df = df.melt(id_vars=id_vars, value_vars=indicator_cols,
-                      var_name="AntibioticRaw", value_name="Tested")
-    long_df["Tested"] = pd.to_numeric(long_df["Tested"], errors="coerce").fillna(0).astype(int)
-
-
-    # -------------------- class mode vs antibiotic mode --------------------
-    aware_headers_needed = False  # set True in antibiotic-level mode
-
-    if antibiotic_classes:
-        # ---------- CLASS MODE ----------
-        # For each class, mark whether ANY member antibiotic was tested (per row),
-        # then compute coverage per class by group/compare.
-        class_df = df[id_vars].copy()
-        present_any = False
-        for cls, cols in antibiotic_classes.items():
-            cols_here = [c for c in cols if c in df.columns]
-            if not cols_here:
-                continue
-            # "Was anything from this class tested on the row?"
-            class_df[cls] = (
-                df[cols_here].apply(pd.to_numeric, errors="coerce").fillna(0).gt(0).any(axis=1)
-            ).astype(int)
-            present_any = True
-        if not present_any:
-            raise ValueError("None of the provided antibiotic class columns were found in the dataframe.")
-
-        long_cls = class_df.melt(id_vars=id_vars, var_name=antibiotic_col, value_name="AnyTested")
-        agg = (long_cls.groupby(id_vars + [antibiotic_col], observed=False)["AnyTested"]
-                      .agg(TestedCount="sum", N="count").reset_index())
-        agg["CoveragePct"] = agg["TestedCount"] / agg["N"] * 100.0
-
-        # order classes globally
-        order_stat = agg.groupby(antibiotic_col, observed=False)["CoveragePct"] \
-                        .agg(mean="mean", median="median")
-        if sort_stat not in order_stat.columns:
-            raise ValueError("sort_stat must be 'mean' or 'median' in class mode.")
-        order = order_stat[sort_stat].sort_values(ascending=False).index.tolist()
-        if top_n and len(order) > top_n:
-            order = order[:top_n]
-
-        tidy = agg[agg[antibiotic_col].isin(order)].copy()
-        tidy[antibiotic_col] = pd.Categorical(tidy[antibiotic_col], categories=order, ordered=True)
-
-    else:
-        # ---------- ANTIBIOTIC MODE ----------
-        # Coverage per antibiotic by group/compare.
-        agg = (long_df.groupby(id_vars + ["AntibioticRaw"], observed=False)["Tested"]
-                      .agg(TestedCount="sum", N="count").reset_index())
-        agg["CoveragePct"] = agg["TestedCount"] / agg["N"] * 100.0
-
-        # Pretty x labels
-        def _pretty(raw: str) -> str:
-            cleaned = raw.replace(tested_suffix, "")
-            parts = cleaned.split(" - ")
-            if len(parts) == 2:
-                abbr, full = parts[0].strip(), parts[1].strip()
-                if xaxis_label_format == "abbr":
-                    return abbr
-                if xaxis_label_format == "both":
-                    return f"{abbr} ({full})"
-                return full
-            return cleaned
-
-        agg[antibiotic_col] = agg["AntibioticRaw"].map(_pretty)
-
-        # AWaRe mapping for headers/filtering
-        abx_to_class = {raw: "Unknown" for raw in indicator_cols}
-        if antibiotic_class_map:
-            abx_to_class.update({str(k): str(v) for k, v in antibiotic_class_map.items()})
-        agg["AWaRe"] = agg["AntibioticRaw"].map(lambda k: abx_to_class.get(k, "Unknown"))
-
-        if aware_filter is not None:
-            keep = set(aware_filter)
-            agg = agg[agg["AWaRe"].isin(keep)].copy()
-            if agg.empty:
-                raise ValueError("No rows remain after applying aware_filter.")
-
-        # sort antibiotics within AWaRe blocks
-        stat_per_abx = agg.groupby(antibiotic_col, observed=False)["CoveragePct"] \
-                          .agg(mean="mean", median="median")
-        if sort_stat not in stat_per_abx.columns:
-            raise ValueError("sort_stat must be 'mean' or 'median' in antibiotic mode.")
-        abx_sorted = stat_per_abx[sort_stat].sort_values(ascending=False).index.tolist()
-        if top_n and len(abx_sorted) > top_n:
-            abx_sorted = abx_sorted[:top_n]
-        agg = agg[agg[antibiotic_col].isin(abx_sorted)].copy()
-
-        # contiguous blocks: Access → Watch → Reserve → Unknown
-        order_classes = ["Access", "Watch", "Reserve", "Unknown"]
-        abx_to_aware = (agg.drop_duplicates(subset=[antibiotic_col, "AWaRe"])
-                          .set_index(antibiotic_col)["AWaRe"].to_dict())
-        class_to_members: Dict[str, List[str]] = {c: [] for c in order_classes}
-        for abx in abx_sorted:
-            cls = abx_to_aware.get(abx, "Unknown")
-            if cls not in class_to_members:
-                cls = "Unknown"
-            class_to_members[cls].append(abx)
-
-        abx_order_blocked = [abx for cls in order_classes for abx in class_to_members[cls]]
-        agg[antibiotic_col] = pd.Categorical(agg[antibiotic_col], categories=abx_order_blocked, ordered=True)
-        tidy = agg.sort_values([antibiotic_col] + ([group_col] if group_col else []) +
-                               ([compare_col] if compare_col else []))
-        aware_headers_needed = True
-
-    # -------------------- palettes & patterns --------------------
-    def _is_hex(c: str) -> bool:
-        c = c.strip().lstrip("#")
-        return len(c) in (3, 6) and all(ch in "0123456789abcdefABCDEF" for ch in c)
-
-    has_group = group_col is not None and group_col in df.columns
-    has_compare = compare_col is not None and compare_col in df.columns
-
-    # Values for coloring/patterning
-    groups_vals = tidy[group_col].dropna().unique().tolist() if has_group else []
-    compare_vals = tidy[compare_col].dropna().unique().tolist() if has_compare else []
-
-    # Colors (either dict provided, or list cycling, or defaults)
-    if has_group:
-        if group_palette is None:
-            if bar_colors:
-                clean = [("#" + c.strip().lstrip("#")) for c in bar_colors if _is_hex(c)]
-                if not clean:
-                    raise ValueError("bar_colors provided, but no valid hex colors found.")
-                group_palette = {g: clean[i % len(clean)] for i, g in enumerate(groups_vals)}
-            else:
-                default_palette = [
-                    "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3",
-                    "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3"
-                ]
-                group_palette = {g: default_palette[i % len(default_palette)] for i, g in enumerate(groups_vals)}
-    else:
-        group_palette = {}  # not used
-
-    # Patterns (only if compare_col is present)
-    if has_compare:
-        if pattern_map is None:
-            # a compact, print-friendly set
-            base_patterns = ["", "/", "\\", "x", ".", "+"]
-            pattern_map = {c: base_patterns[i % len(base_patterns)] for i, c in enumerate(compare_vals)}
-
-    # -------------------- figure --------------------
-    fig = go.Figure()
-
-    if has_group and has_compare:
-        # color = group_col, pattern = compare_col
-        for g in groups_vals:
-            for cval in compare_vals:
-                sub = tidy[(tidy[group_col] == g) & (tidy[compare_col] == cval)]
-                if sub.empty:
-                    continue
-                fig.add_bar(
-                    x=sub[antibiotic_col],
-                    y=sub["CoveragePct"],
-                    name=f"{g} • {cval}",
-                    marker_color=group_palette[g],
-                    marker_line=dict(width=0.5, color="rgba(0,0,0,0.25)"),
-                    marker_pattern_shape=pattern_map[cval],
-                    offsetgroup=str(g),  # group side-by-side by group
-                    legendgroup=f"{g}|{cval}",
-                    text=(sub["CoveragePct"].round(value_decimals).astype(str) + "%") if show_values else None,
-                    textposition="outside" if show_values else "none",
-                    hovertemplate=(
-                        f"{group_col}: {g}<br>"
-                        f"{compare_col}: {cval}<br>"
-                        "Antibiotic: %{x}<br>"
-                        "Coverage: %{y:.1f}%<extra></extra>"
-                    ),
-                )
-        fig.update_layout(barmode="group")
-
-    elif has_group and not has_compare:
-        # color = group_col
-        for g in groups_vals:
-            sub = tidy[tidy[group_col] == g]
-            fig.add_bar(
-                x=sub[antibiotic_col],
-                y=sub["CoveragePct"],
-                name=str(g),
-                marker_color=group_palette[g],
-                marker_line=dict(width=0.5, color="rgba(0,0,0,0.25)"),
-                offsetgroup=str(g),
-                text=(sub["CoveragePct"].round(value_decimals).astype(str) + "%") if show_values else None,
-                textposition="outside" if show_values else "none",
-                hovertemplate=(
-                    f"{group_col}: {g}<br>"
-                    "Antibiotic: %{x}<br>"
-                    "Coverage: %{y:.1f}%<extra></extra>"
-                ),
-            )
-        fig.update_layout(barmode="group")
-
-    elif (not has_group) and has_compare:
-        # color by compare_col (reuse group_palette slot)
-        # build a palette over compare values
-        if group_palette is None or not group_palette:
-            if bar_colors:
-                clean = [("#" + c.strip().lstrip("#")) for c in bar_colors if _is_hex(c)]
-                if not clean:
-                    raise ValueError("bar_colors provided, but no valid hex colors found.")
-                group_palette = {c: clean[i % len(clean)] for i, c in enumerate(compare_vals)}
-            else:
-                default_palette = [
-                    "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3",
-                    "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3"
-                ]
-                group_palette = {c: default_palette[i % len(default_palette)] for i, c in enumerate(compare_vals)}
-        for cval in compare_vals:
-            sub = tidy[tidy[compare_col] == cval]
-            fig.add_bar(
-                x=sub[antibiotic_col],
-                y=sub["CoveragePct"],
-                name=str(cval),
-                marker_color=group_palette[cval],
-                marker_line=dict(width=0.5, color="rgba(0,0,0,0.25)"),
-                offsetgroup=str(cval),
-                text=(sub["CoveragePct"].round(value_decimals).astype(str) + "%") if show_values else None,
-                textposition="outside" if show_values else "none",
-                hovertemplate=(
-                    f"{compare_col}: {cval}<br>"
-                    "Antibiotic: %{x}<br>"
-                    "Coverage: %{y:.1f}%<extra></extra>"
-                ),
-            )
-        fig.update_layout(barmode="group")
-
-    else:
-        # -------- No grouping at all --------
-        if antibiotic_classes:
-            # CLASS MODE (no AWaRe headers here):
-            collapsed = (tidy.groupby(antibiotic_col, observed=False)
-                              .agg(CoveragePct=("CoveragePct", "mean"))
-                              .reset_index())
-            x_vals = collapsed[antibiotic_col].tolist()
-            y_vals = collapsed["CoveragePct"].tolist()
-            # single neutral color for all classes
-            bar_colors_final = ["#66c2a5"] * len(x_vals)
-        else:
-            # ANTIBIOTIC MODE with AWaRe available in `tidy`
-            # Compute a single coverage per antibiotic (mean across all rows)
-            collapsed = (tidy.groupby([antibiotic_col, "AWaRe"], observed=False)
-                              .agg(CoveragePct=("CoveragePct", "mean"))
-                              .reset_index())
-
-            # preserve x order from the categorical (if present)
-            if isinstance(tidy[antibiotic_col].dtype, pd.CategoricalDtype):
-                x_order = [c for c in tidy[antibiotic_col].cat.categories if c in collapsed[antibiotic_col].unique()]
-                collapsed[antibiotic_col] = pd.Categorical(collapsed[antibiotic_col],
-                                                            categories=x_order, ordered=True)
-                collapsed = collapsed.sort_values(antibiotic_col)
-            else:
-                x_order = sorted(collapsed[antibiotic_col].unique())
-                collapsed = collapsed.sort_values(antibiotic_col)
-
-            x_vals = collapsed[antibiotic_col].astype(str).tolist()
-            y_vals = collapsed["CoveragePct"].tolist()
-
-            # color each bar by AWaRe header color
-            bar_colors_final = [
-                class_palette.get(aware, class_palette.get("Unknown", "#999999"))
-                for aware in collapsed["AWaRe"].tolist()
-            ]
-
-        fig.add_bar(
-            x=x_vals,
-            y=y_vals,
-            name="All isolates",
-            marker=dict(
-                color=bar_colors_final,
-                line=dict(width=0.5, color="rgba(0,0,0,0.25)")
-            ),
-            hovertemplate="Antibiotic: %{x}<br>Coverage: %{y:.1f}%<extra></extra>",
-            text=(pd.Series(y_vals).round(value_decimals).astype(str) + "%").tolist() if show_values else None,
-            textposition="outside" if show_values else "none",
-        )
-        fig.update_layout(barmode="group")
-
-    # -------------------- cutoff line --------------------
-    if show_cutoff:
-        # number of x categories actually present
-        if isinstance(tidy[antibiotic_col].dtype, pd.CategoricalDtype):
-            xcount = len([c for c in tidy[antibiotic_col].cat.categories if c in tidy[antibiotic_col].unique()])
-        else:
-            xcount = tidy[antibiotic_col].nunique()
-
-        fig.add_shape(
-            type="line", x0=-0.5, x1=xcount - 0.5, y0=cutoff_value, y1=cutoff_value,
-            xref="x", yref="y", line=dict(width=2, dash=cutoff_dash, color="rgba(0,0,0,0.5)")
-        )
-        fig.add_annotation(
-            x=0.5, xref="paper", y=cutoff_value, yref="y",
-            text=cutoff_label, showarrow=False, yanchor="bottom", font=dict(size=12)
-        )
-
-    # -------------------- AWaRe headers & separators (antibiotic mode only) --------------------
-    if aware_headers_needed:
-        order_classes = ["Access", "Watch", "Reserve", "Unknown"]
-        cats = list(tidy[antibiotic_col].cat.categories) if isinstance(tidy[antibiotic_col].dtype, pd.CategoricalDtype) \
-               else sorted(tidy[antibiotic_col].unique())
-
-        # map pretty label → class
-        lbl_to_class = (tidy.drop_duplicates(subset=[antibiotic_col, "AWaRe"])
-                           .set_index(antibiotic_col)["AWaRe"].to_dict())
-
-        x_cursor = 0
-        mids = {}
-        bounds = []
-        for cls in order_classes:
-            members = [abx for abx in cats if lbl_to_class.get(abx, "Unknown") == cls and abx in tidy[antibiotic_col].unique()]
-            if not members:
-                continue
-            n = len(members)
-            mids[cls] = x_cursor + (n / 2.0) - 0.5
-            x_cursor += n
-            bounds.append(x_cursor - 0.5)
-
-        for cls, mid in mids.items():
-            fig.add_annotation(
-                x=mid, y=1.06, xref="x", yref="paper",
-                text=f"<b>{cls}</b>", showarrow=False,
-                font=dict(color=class_palette.get(cls, "#888888"), size=13)
-            )
-
-        for b in bounds[:-1]:
-            fig.add_shape(
-                type="line", x0=b, x1=b, y0=0, y1=1,
-                xref="x", yref="paper",
-                line=dict(color="rgba(0,0,0,0.25)", width=1, dash="dot"),
-                layer="below"
-            )
-
-    # -------------------- axes & layout --------------------
-    # lock the x order to our categories
-    if isinstance(tidy[antibiotic_col].dtype, pd.CategoricalDtype):
-        x_cat_order = [c for c in tidy[antibiotic_col].cat.categories if c in tidy[antibiotic_col].unique()]
-    else:
-        x_cat_order = sorted(tidy[antibiotic_col].unique())
 
     fig.update_xaxes(
-        title_text=("Antibiotic Class" if antibiotic_classes else "Antibiotic"),
-        tickangle=45, ticks="outside", automargin=True,
-        categoryorder="array", categoryarray=x_cat_order
+        tickangle=45, categoryorder="array",
+        categoryarray=new_order, automargin=True,
+        tickfont=dict(size=18),
+        title_font=dict(size=22)
     )
+    
     fig.update_yaxes(
-        title_text="Coverage tested (%)",
-        ticks="outside",
-        range=yaxis_range if yaxis_range is not None else [0, 100],
-        rangemode="tozero",
-        gridcolor="rgba(0,0,0,0.07)"
+        zeroline=True, zerolinewidth=2, zerolinecolor="LightGrey",
+        range=yaxis_range, rangemode="tozero" if yaxis_range is None else "normal",
+        tickfont=dict(size=18),
+        title_font=dict(size=22)
     )
-
-    # clean publication layout
-    fig.update_layout(
-        title=dict(text=title.replace("\n", "<br>"), x=0.5, y=0.98),
-        width=width, height=height,
-        margin=dict(l=70, r=30, t=80, b=110),
-        template="simple_white",
-        legend=legend,
-        font=dict(size=13)
-    )
-
+    
     return fig
-
-
-
-
-
-
-
-
-
-
-# ==============================================================================
-# Batch exporter with embedded research questions + catalog
-# ==============================================================================
-
-
-def export_all_boxplots_with_questions(
-    output_dir: str,
-    formats: Iterable[str] = ("html", "png"),
-    image_scale: int = 3,
-    single_watch_col: Optional[str] = None,
-    # required only for Bundesland+Year normalization
-    population_data_path: Optional[str] = None,
-) -> Dict[str, List[str]]:
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    def safe_name(s: str) -> str:
-        s = re.sub(r"\s+", "_", s.strip())
-        return re.sub(r"[^A-Za-z0-9_.-]", "_", s)
-
-    OKABE_ITO = [
-        "#a6cee3",
-        "#1f78b4",
-        "#b2df8a",
-        "#33a02c",
-        "#fb9a99",
-        "#e31a1c",
-        "#fdbf6f",
-        "#ff7f00",
-        "#cab2d6",
-        "#6a3d9a"
-    ]
-
-    def cmap_from_values(values):
-        return {v: OKABE_ITO[i % len(OKABE_ITO)] for i, v in enumerate(values)}
-
-    # Load data & antibiotic lists
-    load = LoadClasses()
-    df = pd.read_csv(
-        "./datasets/output/tables/saved_with_test_indicators_tab.csv")
-    # Load population data
-    population_df = pd.read_csv(population_data_path)
-    df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
-
-    watch_antibiotic = [
-        c for c in load.convert_to_tested_columns(
-            load.get_antibiotics_by_category(categories=["Watch"])
-        ) if c in df.columns
-    ]
-    access_antibiotic = [
-        c for c in load.convert_to_tested_columns(
-            load.get_antibiotics_by_category(categories=["Access"])
-        ) if c in df.columns
-    ]
-    critical_antibiotic = [
-        c for c in load.convert_to_tested_columns(
-            load.get_antibiotics_by_category(categories=["Reserve"])
-        ) if c in df.columns
-    ]
-
-    summary_tool_bundesland_ = AntibioticCoverageSummary(
-        df=df, population_df=population_df)
-
-    def _min_n_filter(data: pd.DataFrame, group_cols: List[str], min_n: int = 50) -> pd.DataFrame:
-        counts = data.groupby(group_cols).size().reset_index(name="n")
-        return data.merge(counts, on=group_cols).query("n >= @min_n").drop(columns="n")
-
-    results: Dict[str, List[str]] = {}
-    questions_map: Dict[str, str] = {}
-
-    def add_job(key: str, question: str, build_fn):
-        try:
-            fig: go.Figure = build_fn(question)
-            if fig is None:
-                print(f"[warn] Builder for '{key}' returned None; skipping.")
-                return
-            base = Path(output_dir) / safe_name(key)
-            results[key] = _save_plotly(
-                fig, base, formats=formats, image_scale=image_scale)
-            questions_map[key] = question
-        except Exception as e:
-            print(f"[error] Building '{key}' failed: {e}")
-
-    # Choose a single Watch antibiotic for deep dives if not specified
-    if single_watch_col is None and watch_antibiotic:
-        single_watch_col = watch_antibiotic[0]
-
-    # ---------------- Jobs ----------------
-    show_threshold_line = True,
-    if watch_antibiotic:
-        add_job(
-            "Q1",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: plot_tests_boxplot(
-                test_data_df=df,
-                population_data_path='./datasets/population-data-cleaned.csv',
-                group_col='Bundesland',
-                compare_col="Year",
-                antibiotics_to_plot=watch_antibiotic,
-                extent=1.5,
-                height=800,
-                width=1500,
-                show_threshold_line=True,
-                threshold_line=0.9,
-                sort_stat='q3',
-                title="Regional and temporal trends in antibiotic testing rates (WHO Watch List) (Per 100K Population) - Boxplot"
-            )
-        ),
-
-        add_job(
-            "Q2",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: plot_tests_boxplot(
-                test_data_df=df,
-                # population_data_path='./datasets/population-data-cleaned.csv',
-                group_col='Bundesland',
-                compare_col="Year",
-                antibiotics_to_plot=watch_antibiotic,
-                extent=1.5,
-                height=800,
-                width=1500,
-                show_threshold_line=True,
-                threshold_line=0.9,
-                sort_stat='q3',
-                title="Regional and temporal trends in antibiotic testing rates (WHO Watch List) (Mean Coverage)"
-            )
-        ),
-
-        add_job(
-            "Q1A",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/year_bundesland_100K_Watch",
-                title="Regional and temporal trends in antibiotic testing rates (WHO AWaRe Watch List) — Per 100K coverage; <br> error bars show between-laboratory variability (IQR).",
-                per_100k_population=True,
-                compare_col="Year",
-                color_map=cmap_from_values(df["Year"].unique().tolist()),
-                antibiotics_to_plot=watch_antibiotic
-            )
-        ),
-
-        add_job(
-            "Q2A",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/year_bundesland_mean_Watch",
-                title="Regional and temporal trends in antibiotic testing rates (WHO AWaRe Watch List) — Mean coverage; <br> error bars show between-laboratory variability (IQR).",
-                # per_100k_population=True,
-                compare_col="Year",
-                color_map=cmap_from_values(df["Year"].unique().tolist()),
-                antibiotics_to_plot=watch_antibiotic
-            )
-        ),
-
-        add_job(
-            "Q3",
-            f"How do testing rates for WHO Watch antibiotics differ across Berlin ARS labs by CareType, and do these differences reflect case-mix or testing policy?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/caretype_bundesland_mean_watch",
-                title="WHO AWaRe Watch list testing coverage across Berlin ARS laboratories — by care setting (CareType). <br> Bars: mean coverage; error bars: IQR (within-lab variability).",
-                # per_100k_population=True,
-                compare_col="CareType",
-                color_map=cmap_from_values(df["CareType"].unique().tolist()),
-                antibiotics_to_plot=watch_antibiotic
-            )
-        ),
-
-    if critical_antibiotic:
-
-        add_job(
-            "Q4",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: plot_tests_boxplot(
-                test_data_df=df,
-                population_data_path='./datasets/population-data-cleaned.csv',
-                group_col='Bundesland',
-                compare_col="Year",
-                antibiotics_to_plot=critical_antibiotic,
-                extent=1.5,
-                height=800,
-                width=1500,
-                show_threshold_line=True,
-                threshold_line=0.9,
-                sort_stat='q3',
-                title="Regional and temporal trends in antibiotic testing rates (WHO Reserved List) (Per 100K Population)"
-            )
-        ),
-        add_job(
-            "Q5",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: plot_tests_boxplot(
-                test_data_df=df,
-                # population_data_path='./datasets/population-data-cleaned.csv',
-                group_col='Bundesland',
-                compare_col="Year",
-                antibiotics_to_plot=critical_antibiotic,
-                extent=1.5,
-                height=800,
-                width=1500,
-                show_threshold_line=True,
-                threshold_line=0.9,
-                sort_stat='q3',
-                title="Regional and temporal trends in antibiotic testing rates (WHO Reserved List) (Mean Coverage)"
-            )
-        ),
-
-        add_job(
-            "Q4A",
-            f"How do per-capita testing rates for Reserved antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/year_bundesland_100K_Reserved",
-                title="Regional and temporal trends in antibiotic testing rates (WHO AWaRe Reserved List) — Per 100K coverage; <br> error bars show between-laboratory variability (IQR).",
-                per_100k_population=True,
-                compare_col="Year",
-                color_map=cmap_from_values(df["Year"].unique().tolist()),
-                antibiotics_to_plot=critical_antibiotic
-            )
-        ),
-
-        add_job(
-            "Q5A",
-            f"How do per-capita testing rates for Reserved antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/year_bundesland_mean_Reserved",
-                title="Regional and temporal trends in antibiotic testing rates (WHO AWaRe Reserved List) — Mean coverage; <br> error bars show between-laboratory variability (IQR).",
-                # per_100k_population=True,
-                compare_col="Year",
-                color_map=cmap_from_values(df["Year"].unique().tolist()),
-                antibiotics_to_plot=critical_antibiotic
-            )
-        ),
-
-        add_job(
-            "Q6",
-            f"How do testing rates for WHO Reserved antibiotics differ across Berlin ARS labs by CareType, and do these differences reflect case-mix or testing policy?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/caretype_bundesland_mean",
-                title="WHO AWaRe Reserved testing coverage across Berlin ARS laboratories — by care setting (CareType). <br> Bars: mean coverage; error bars: IQR (within-lab variability).",
-                # per_100k_population=True,
-                compare_col="CareType",
-                color_map=cmap_from_values(df["CareType"].unique().tolist()),
-                antibiotics_to_plot=critical_antibiotic
-            )
-        )
-
-    if access_antibiotic:
-        add_job(
-            "Q7",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: plot_tests_boxplot(
-                test_data_df=df,
-                population_data_path='./datasets/population-data-cleaned.csv',
-                group_col='Bundesland',
-                compare_col="Year",
-                antibiotics_to_plot=critical_antibiotic,
-                extent=1.5,
-                height=800,
-                width=1500,
-                show_threshold_line=True,
-                threshold_line=0.9,
-                sort_stat='q3',
-                title="Regional and temporal trends in antibiotic testing rates (WHO Access List) (Per 100K Population)"
-            )
-        ),
-        add_job(
-            "Q8",
-            f"How do per-capita testing rates for Watch antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: plot_tests_boxplot(
-                test_data_df=df,
-                # population_data_path='./datasets/population-data-cleaned.csv',
-                group_col='Bundesland',
-                compare_col="Year",
-                antibiotics_to_plot=critical_antibiotic,
-                extent=1.5,
-                height=800,
-                width=1500,
-                show_threshold_line=True,
-                threshold_line=0.9,
-                sort_stat='q3',
-                title="Regional and temporal trends in antibiotic testing rates (WHO Access List) (Mean Coverage)"
-            )
-        ),
-
-        add_job(
-            "Q7A",
-            f"How do per-capita testing rates for Access antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/year_bundesland_100k",
-                title="Regional and temporal trends in antibiotic testing rates (WHO AWaRe Access List) — Per 100K coverage; <br> error bars show between-laboratory variability (IQR).",
-                per_100k_population=True,
-                compare_col="Year",
-                color_map=cmap_from_values(df["Year"].unique().tolist()),
-                antibiotics_to_plot=critical_antibiotic
-            )
-        ),
-
-        add_job(
-            "Q8A",
-            f"How do per-capita testing rates for Access antibiotics vary across German states, and how have these rates changed over time?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/year_bundesland_mean_access",
-                title="Regional and temporal trends in antibiotic testing rates (WHO AWaRe Access List) — Mean coverage; <br> error bars show between-laboratory variability (IQR).",
-                # per_100k_population=True,
-                compare_col="Year",
-                color_map=cmap_from_values(df["Year"].unique().tolist()),
-                antibiotics_to_plot=critical_antibiotic
-            )
-        ),
-
-        add_job(
-            "Q9",
-            f"How do testing rates for WHO Access antibiotics differ across Berlin ARS labs by CareType, and do these differences reflect case-mix or testing policy?",
-            lambda q: summary_tool_bundesland_.plot_group_comparison(
-                df_override=df,
-                group_by="Bundesland",
-                variation_mode="iqr",
-                output_prefix=output_dir + "/caretype_bundesland_mean",
-                title="WHO AWaRe Access testing coverage across Berlin ARS laboratories — by care setting (CareType). <br> Bars: mean coverage; error bars: IQR (within-lab variability).",
-                # per_100k_population=True,
-                compare_col="CareType",
-                color_map=cmap_from_values(df["CareType"].unique().tolist()),
-                antibiotics_to_plot=critical_antibiotic
-            )
-        )
-
-    # Catalog outputs
-    catalog_rows = []
-    for key, files in results.items():
-        catalog_rows.append({
-            "chart_key": key,
-            "question": questions_map.get(key, ""),
-            "saved_files": "|".join(files)
-        })
-    if catalog_rows:
-        catalog_df = pd.DataFrame(catalog_rows).sort_values("chart_key")
-        catalog_csv = Path(output_dir) / "questions_catalog.csv"
-        catalog_json = Path(output_dir) / "questions_catalog.json"
-        catalog_df.to_csv(catalog_csv, index=False)
-        with open(catalog_json, "w", encoding="utf-8") as f:
-            json.dump(catalog_rows, f, indent=2, ensure_ascii=False)
-        print(f"[done] Catalog written: {catalog_csv} and {catalog_json}")
-
-    print(
-        f"[done] Saved {sum(len(v) for v in results.values())} files to {output_dir}")
-    return results
-
 
 ########################## OTHER HELPERS ##################################################
 
@@ -2680,8 +1532,6 @@ def filter_antibiotic_group_items(df, groups):
     missing = {g: [a for a in ab if a not in df.columns]
                for g, ab in groups.items()}
     return {g: v for g, v in present.items() if v}, missing
-
-
 
 
 def antibiotic_aggregate_by_group(df: pd.DataFrame, group_col: str) -> pd.DataFrame:

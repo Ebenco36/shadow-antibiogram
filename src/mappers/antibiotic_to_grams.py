@@ -8,7 +8,7 @@ ABX_TARGET_MAP = {
     "AMC":"mixed","AMK":"-ve","AMP":"mixed","AMS":"mixed","AMX":"mixed","AZT":"-ve","CAZ":"-ve","CEP":"-ve","CEZ":"+ve",
     "CIP":"-ve","CLI":"+ve","CMP":"mixed","COL":"-ve","CRO":"-ve","CTM":"-ve","CTX":"-ve","CXM":"-ve","DOX":"mixed",
     "DPT":"+ve","ERT":"mixed","ERY":"+ve","FLU":"+ve","FOS":"mixed","FUS":"+ve","GEN":"-ve","GHL":"-ve","IMP":"mixed",
-    "LEV":"-ve","LIZ":"+ve","MER":"mixed","MOX":"-ve","MUP":"+ve","NFT":"-ve","OXA":"+ve","PEN":"+ve","PIP":"-ve",
+    "LEV":"-ve","LIZ":"+ve","MER":"mixed","MOX":"-ve","MUP":"+ve","NFT":"mixed","OXA":"+ve","PEN":"+ve","PIP":"-ve",
     "PIT":"mixed","RAM":"+ve","STR":"mixed","SXT":"mixed","TET":"mixed","TGC":"mixed","TOB":"-ve","TPL":"+ve", "VAN":"+ve", 
     "NAL":"-ve","SLD":"mixed","TRP":"-ve","AZL":"-ve","AZM":"+ve","BTC":"+ve","CAR":"-ve","CEC":"mixed", "CEX":"mixed",
     "CFA":"-ve","CFI":"-ve","CFL":"-ve","CFR":"mixed","CIB":"-ve","CLN":"-ve","CLR":"+ve","COX":"mixed", "CPO":"-ve",
@@ -28,3 +28,23 @@ ABX_TARGET_MAP = {
     "CPR":None,"CZD":None,"ETH":None,"KET":None,"NYS":None,"LAM":None,"PAR":None,"PAS":None,"PTH":None,"PZA":None,"MCZ":None,
     "SLN":None,"SOX":None,"SAZ":None,"SFX":None,"VOR":None,"MIC":None,
 }
+
+
+# Updated corrections
+CORRECTIONS = {
+    "NFT": "mixed",  # Nitrofurantoin is Broad
+    "CEX": "+ve",    # 1st Gen Ceph is Gram+
+    "CFR": "+ve",    # 1st Gen Ceph is Gram+
+    "CTN": "+ve",    # 1st Gen Ceph is Gram+
+    "CEP": "mixed",  # 4th Gen Ceph is Broad
+    "PIP": "mixed",  # Piperacillin is Broad (Anti-pseudomonal + Enterococcal)
+    "LEV": "mixed",  # Levo covers Gram+ (Strep) and Gram-
+    "MOX": "mixed",  # Moxi covers Gram+ (Strep) and Gram-
+    "MTR": "mixed",  # Metronidazole covers G- and G+ Anaerobes
+    "AZM": "mixed",  # Vinmec lists Macrolides as Broad
+    "CLR": "mixed",  # Vinmec lists Macrolides as Broad
+    "ERY": "mixed",  # Vinmec lists Macrolides as Broad
+}
+
+# Apply updates to your existing map
+ABX_TARGET_MAP.update(CORRECTIONS)

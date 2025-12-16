@@ -1,17 +1,5 @@
-import os
-from pathlib import Path
-import re
-from PIL import Image
 import pandas as pd
-from src.controllers.summary.AntibioticCoverageSummary import AntibioticCoverageSummary
 from src.controllers.AMRTestingBasicStatistics import AMRTestingPatternAnalysis
-from src.utils.LoadClasses import LoadClasses
-from src.utils.helpers import export_all_boxplots_with_questions
-
-from src.controllers.interfaces.data import Per100kMetric, CountMetric, MeanMetric
-from src.utils.helpers import plot_clustergram_with_dendrograms
-from src.controllers.AMRMultiAnalyzer import AMRMultiAnalyzer
-from src.controllers.interfaces.data import BundeslandPopulationProvider, DefaultAntibioticNameParser, PctMetric, SuffixAntibioticDetector
 
 
 def run_visualizations(main_df:pd.DataFrame):

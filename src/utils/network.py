@@ -514,6 +514,13 @@ def visualize_antibiotic_network(
     bubble_alpha: float = 0.12,
     bubble_face: str = "#000000",
     bubble_edge: str = "#00000022",
+
+    node_color_mode: str = "cluster",  # one of: "cluster" | "neutral" | "semantic"
+    # - cluster  : color by Louvain community (current behavior)
+    # - neutral  : single color for all nodes (temporal-safe)
+    # - semantic : color by external stable category (e.g. AWaRe)
+    semantic_color_map: Optional[Dict[str, str]] = None,
+    neutral_node_color: str = "#5A5A5A",
 ) -> Dict[str, Any]:
     """
     Visualize a similarity matrix (index==columns) as a network with:
@@ -621,9 +628,35 @@ def visualize_antibiotic_network(
         "orchid", "slateblue", "lightseagreen", "firebrick"
     ]
     default_palette = [mcolors.CSS4_COLORS[name] for name in palette_names]
-    node_color_map = {
-        n: _resolve_color_for_group(partition[n], cluster_colors, default_palette) for n in G
-    }
+    # node_color_map = {
+    #     n: _resolve_color_for_group(partition[n], cluster_colors, default_palette) for n in G
+    # }
+
+    # --- Node coloring (dynamic switch) ---
+    if node_color_mode == "cluster":
+        node_color_map = {
+            n: _resolve_color_for_group(partition[n], cluster_colors, default_palette)
+            for n in G
+        }
+
+    elif node_color_mode == "neutral":
+        node_color_map = {n: neutral_node_color for n in G}
+
+    elif node_color_mode == "semantic":
+        if semantic_color_map is None:
+            raise ValueError(
+                "semantic_color_map must be provided when node_color_mode='semantic'"
+            )
+        node_color_map = {
+            n: semantic_color_map.get(n, neutral_node_color)
+            for n in G
+        }
+
+    else:
+        raise ValueError(
+            "node_color_mode must be one of {'cluster', 'neutral', 'semantic'}"
+        )
+
 
     # ----------------------------- HTML (PyVis) -----------------------------
     html_path = os.path.join(output_dir, output_html)
