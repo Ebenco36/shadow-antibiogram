@@ -68,12 +68,19 @@ import plotly.graph_objects as go
 # GLOBAL FIXED COLORS
 # -----------------------------
 PARTICIPATION_COLORS = {
-    "continuous":   "#1b9e77",  # darker teal (dominant, stable base)
-    "entering":     "#d95f02",  # darker orange
-    "single_year":  "#7570b3",  # purple (distinct from pink/blue)
-    "intermittent": "#e6ab02",  # mustard / yellow-orange
-    "leaving":      "#666666",  # neutral dark gray
+    "Continuous":   "#0072B2",  # blue
+    "Entering":     "#E69F00",  # orange
+    "Single Year":  "#009E73",  # bluish green
+    "Leaving":      "#D55E00",  # vermilion
+    "Intermittent": "#CC79A7",  # reddish purple
 }
+
+def has_organisation_column(
+    df: pd.DataFrame,
+    org_col: str = "NumberOrganisation"
+) -> bool:
+    return org_col in df.columns and df[org_col].notna().any()
+
 
 def _style_pub_layout(
     fig: go.Figure,
@@ -124,6 +131,100 @@ def _style_pub_layout(
 
         # ---- Margins ----
         margin=dict(l=90, r=60, t=100, b=180),
+    )
+
+    return fig
+
+
+def style_time_axes(
+    fig: go.Figure,
+    *,
+    dates: pd.Series,
+    x_title: str = "Month",
+    y_title: str = "Isolate Count",
+    mode: str = "ticks",   # "ticks" (OLD) or "months+years" (NEW)
+    month_dtick: str = "M1",
+    month_angle: int = -45,
+    month_font_size: int = 20,
+    title_font_size: int = 22,
+    year_font_size: int = 18,
+    year_y: float = -0.28,
+    bottom_margin_ticks: int = 90,
+    bottom_margin_months_years: int = 190,
+):
+    """
+    Style time axes with a switch:
+      - mode="ticks": month+year in tick labels (old behavior)
+      - mode="months+years": months as ticks (slanted), years as annotations (horizontal)
+    """
+
+    # ------------------------------------------------------------------
+    # Remove previously-added year annotations (safe re-run)
+    # ------------------------------------------------------------------
+    if fig.layout.annotations:
+        fig.layout.annotations = tuple(
+            a for a in fig.layout.annotations
+            if not (isinstance(a.text, str) and a.text.isdigit() and len(a.text) == 4)
+        )
+
+    # ------------------------------------------------------------------
+    # X axis
+    # ------------------------------------------------------------------
+    if mode == "ticks":
+        fig.update_xaxes(
+            title_text=x_title,
+            dtick=month_dtick,
+            tickformat="%b\n%Y",
+            tickangle=month_angle,
+            showgrid=True,
+            ticks="outside",
+            automargin=True,
+            title_font=dict(size=title_font_size),
+            tickfont=dict(size=month_font_size),
+        )
+        fig.update_layout(margin=dict(b=bottom_margin_ticks))
+
+    elif mode == "months+years":
+        fig.update_xaxes(
+            title_text=x_title,
+            dtick=month_dtick,
+            tickformat="%b",
+            tickangle=month_angle,
+            showgrid=True,
+            ticks="outside",
+            automargin=True,
+            title_font=dict(size=title_font_size),
+            tickfont=dict(size=month_font_size),
+        )
+
+        # Add years as horizontal annotations
+        d = pd.to_datetime(pd.Series(dates).dropna())
+        years = pd.date_range(d.min(), d.max(), freq="YS")
+        for y in years:
+            fig.add_annotation(
+                x=y, xref="x",
+                y=year_y, yref="paper",
+                text=y.strftime("%Y"),
+                showarrow=False,
+                xanchor="center",
+                yanchor="top",
+                font=dict(size=year_font_size),
+            )
+
+        fig.update_layout(margin=dict(b=bottom_margin_months_years))
+
+    else:
+        raise ValueError("mode must be 'ticks' or 'months+years'")
+
+    # ------------------------------------------------------------------
+    # Y axis (same for both modes)
+    # ------------------------------------------------------------------
+    fig.update_yaxes(
+        title_text=y_title,
+        showgrid=True,
+        ticks="outside",
+        title_font=dict(size=title_font_size),
+        tickfont=dict(size=month_font_size),
     )
 
     return fig
@@ -188,7 +289,7 @@ def create_participation_bar_chart(
     """
     Generic stacked bar chart for participation analysis.
     """
-
+    
     fig = px.bar(
         df,
         x=x,
@@ -818,19 +919,19 @@ def label_participation_types(
         stats = org_year_stats.loc[org]
 
         if org in continuous_orgs:
-            return "continuous"
+            return "Continuous"
 
         first_y = stats["first_year"]
         last_y = stats["last_year"]
         n_years = stats["n_years"]
 
         if n_years == 1:
-            return "single_year"
+            return "Single Year"
         if year == first_y and year < last_y:
-            return "entering"
+            return "Entering"
         if year == last_y and year > first_y:
-            return "leaving"
-        return "intermittent"
+            return "Leaving"
+        return "Intermittent"
 
     df["ParticipationType"] = df.apply(classify_row, axis=1)
     return df
@@ -896,13 +997,20 @@ def run_temporal_with_participation_layers(
     max_year: int = 2023,
 ):
     """
-    Run three analyses:
+    Run analyses with a safe fallback when org_col is missing.
+
+    If org_col exists and has non-null values:
       1) Full national series (all organisations)
       2) Continuous participants only
       3) Participation decomposition (counts by type)
+    Else:
+      1) Full national series only
     """
 
-    # --- 1. Full series (already what you had) ---
+    # --- 0) Check org availability ---
+    has_orgs = (org_col in df.columns) and df[org_col].notna().any()
+
+    # --- 1) Full series (always) ---
     analyzer_full = TemporalTrendAnalyzer(
         df=df,
         date_column=date_col,
@@ -910,7 +1018,22 @@ def run_temporal_with_participation_layers(
     )
     monthly_full, shocks_full, breaks_full, amp_full = analyzer_full.run_complete_analysis()
 
-    # --- 2. Continuous participants only ---
+    if not has_orgs:
+        # Fallback result: only full series is available
+        return {
+            "has_orgs": False,
+            "full": {
+                "analyzer": analyzer_full,
+                "monthly": monthly_full,
+                "shocks": shocks_full,
+                "breaks": breaks_full,
+                "amplitude": amp_full,
+            },
+            "continuous": None,
+            "participation": None,
+        }
+
+    # --- 2) Continuous participants only (requires org_col) ---
     continuous_orgs = get_continuous_organisations(
         df, date_col=date_col, org_col=org_col,
         min_year=min_year, max_year=max_year
@@ -925,7 +1048,7 @@ def run_temporal_with_participation_layers(
     )
     monthly_cont, shocks_cont, breaks_cont, amp_cont = analyzer_cont.run_complete_analysis()
 
-    # --- 3. Participation decomposition (per year) ---
+    # --- 3) Participation decomposition (requires org_col) ---
     decomp_counts = compute_participation_decomposition(
         df, date_col=date_col, org_col=org_col,
         min_year=min_year, max_year=max_year
@@ -936,6 +1059,7 @@ def run_temporal_with_participation_layers(
     )
 
     return {
+        "has_orgs": True,
         "full": {
             "analyzer": analyzer_full,
             "monthly": monthly_full,
@@ -955,6 +1079,7 @@ def run_temporal_with_participation_layers(
             "organisation_counts": decomp_orgs,
         },
     }
+
 
 
 
@@ -1382,7 +1507,7 @@ class TemporalTrendAnalyzer:
         
         # Axes
         fig.update_xaxes(
-            dtick="M1", tickformat="%b\n%Y", showgrid=True, ticks="outside",
+            dtick="M1", tickformat="%b\n%Y", showgrid=True, ticks="outside", tickangle=-45,
             title_font=dict(size=22),
             tickfont=dict(size=20),
         )
@@ -1394,6 +1519,19 @@ class TemporalTrendAnalyzer:
 
         # Center/spacing for title
         apply_publication_layout(fig, bottom_margin=90, title_font_size=26, title_bottom_padding=20)
+        # style_time_axes(
+        #     fig,
+        #     dates=pd.Series(series.index),   # <-- use the index for year labels
+        #     x_title="Month",
+        #     y_title="",                      # decomposition panels usually don’t need a shared y title
+        #     mode="months+years",             # NEW option; use "ticks" for old
+        #     month_dtick="M1",
+        #     month_angle=-45,
+        #     year_font_size=18,
+        #     year_y=-0.1,                    # a bit less low for subplots; tweak if needed
+        #     bottom_margin_months_years=220,
+        #     bottom_margin_ticks=90,
+        # )
         arrange_legend(fig, columns=4, outside=True, adjust_width=False)
         
         # Add summary
@@ -1481,15 +1619,29 @@ class TemporalTrendAnalyzer:
         
         # Layout, axis fonts, and title spacing
         apply_publication_layout(fig, bottom_margin=90, title_font_size=26, title_bottom_padding=20)
-        fig.update_xaxes(
-            dtick="M1", tickformat="%b\n%Y", showgrid=True, ticks="outside",
-            title_font=dict(size=22),
-            tickfont=dict(size=20),
-        )
-        fig.update_yaxes(
-            showgrid=True, ticks="outside",
-            title_font=dict(size=22),
-            tickfont=dict(size=20),
+        # fig.update_xaxes(
+        #     dtick="M1", tickformat="%b\n%Y", showgrid=True, ticks="outside", tickangle=-45,
+        #     title_font=dict(size=22),
+        #     tickfont=dict(size=20),
+        # )
+        # fig.update_yaxes(
+        #     showgrid=True, ticks="outside",
+        #     title_font=dict(size=22),
+        #     tickfont=dict(size=20),
+        # )
+        
+        style_time_axes(
+            fig,
+            dates=monthly["Date"],
+            x_title="Month",
+            y_title="Isolates",
+            mode="months+years",    # <-- NEW option (months slanted, years horizontal)
+            month_dtick="M1",
+            month_angle=-45,
+            year_font_size=18,
+            year_y=-0.1,
+            bottom_margin_ticks=90,
+            bottom_margin_months_years=220,
         )
         
         arrange_legend(fig, columns=4, outside=True, adjust_width=False)
@@ -1655,22 +1807,37 @@ class TemporalTrendAnalyzer:
             title=f"{self.title} - Comprehensive View"
         )
         apply_publication_layout(fig, bottom_margin=90, title_font_size=26, title_bottom_padding=20)
-        fig.update_xaxes(
-            title_text="Month", 
-            dtick="M1", 
-            tickformat="%b\n%Y",
-            showgrid=True, 
-            ticks="outside", 
-            automargin=True,
-            title_font=dict(size=22),
-            tickfont=dict(size=20),
-        )
-        fig.update_yaxes(
-            title_text="Isolate Count",
-            showgrid=True, 
-            ticks="outside",
-            title_font=dict(size=22),
-            tickfont=dict(size=20),
+        # fig.update_xaxes(
+        #     title_text="Month", 
+        #     dtick="M1", 
+        #     tickformat="%b\n%Y",
+        #     showgrid=True, 
+        #     ticks="outside", 
+        #     tickangle=-45,
+        #     automargin=True,
+        #     title_font=dict(size=22),
+        #     tickfont=dict(size=20),
+        # )
+        # fig.update_yaxes(
+        #     title_text="Isolate Count",
+        #     showgrid=True, 
+        #     ticks="outside",
+        #     title_font=dict(size=22),
+        #     tickfont=dict(size=20),
+        # )
+        
+        style_time_axes(
+            fig,
+            dates=monthly["Date"],
+            x_title="Month",
+            y_title="Isolate Count",
+            mode="months+years",   # <-- NEW option; set to "ticks" for old
+            month_dtick="M1",
+            month_angle=-45,
+            year_font_size=18,
+            year_y=-0.1,
+            bottom_margin_ticks=90,
+            bottom_margin_months_years=220,
         )
         
         # Legend
@@ -2115,22 +2282,8 @@ def run_main_temporal(
     org_col: str = "NumberOrganisation",
     min_year: Optional[int] = None,
     max_year: Optional[int] = None,
-    base_dir: str = "./temporal_analysis/manuscript",
+    base_dir: str = "./publication_outputs/manuscript",
 ):
-    """
-    Run the full temporal analysis pipeline, including:
-      1) Full national series (all organisations)
-      2) Continuous organisations only
-      3) Participation decomposition (year × participation type)
-
-    Exports:
-      - High-resolution figures (full, continuous, participation)
-      - Data tables for full and continuous series
-      - Decomposition components for full series
-
-    Returns (for backward compatibility):
-      monthly_full, shocks_full, breaks_full, amplitude_full, figures, components_full
-    """
     import os
 
     # -------------------------------------------------------------------------
@@ -2152,17 +2305,16 @@ def run_main_temporal(
         return None
 
     # -------------------------------------------------------------------------
-    # 1. Infer year range if not supplied (works for 2019–2023 and 2020–2022)
+    # 1. Infer year range
     # -------------------------------------------------------------------------
     min_year, max_year = _infer_year_range(
         df, date_col=date_col, min_year=min_year, max_year=max_year
     )
 
-    # Ensure output directory exists
     os.makedirs(base_dir, exist_ok=True)
 
     # -------------------------------------------------------------------------
-    # 2. Run layered temporal analysis (full + continuous + participation)
+    # 2. Run analysis (auto-fallback if org_col missing)
     # -------------------------------------------------------------------------
     results = run_temporal_with_participation_layers(
         df=df,
@@ -2172,28 +2324,18 @@ def run_main_temporal(
         max_year=max_year,
     )
 
-    # Unpack for convenience
+    has_orgs = bool(results.get("has_orgs", False))
+
+    # Unpack full (always present)
     an_full = results["full"]["analyzer"]
     monthly_full = results["full"]["monthly"]
     shocks_full = results["full"]["shocks"]
     breaks_full = results["full"]["breaks"]
     amplitude_full = results["full"]["amplitude"]
 
-    an_cont = results["continuous"]["analyzer"]
-    monthly_cont = results["continuous"]["monthly"]
-    shocks_cont = results["continuous"]["shocks"]
-    breaks_cont = results["continuous"]["breaks"]
-    amplitude_cont = results["continuous"]["amplitude"]
-
-    decomp_counts = results["participation"]["isolate_counts"].copy()
-    decomp_orgs = results["participation"]["organisation_counts"].copy()
-    df_labeled = label_participation_types(df, date_col, org_col)
-
     # -------------------------------------------------------------------------
-    # 3. Create all figures
+    # 3. Create figures (always full; optionally others)
     # -------------------------------------------------------------------------
-
-    # 3.1 Full national series figures
     fig_full_main = an_full.create_main_plot(
         show_shocks=True,
         show_moving_average=True,
@@ -2212,91 +2354,97 @@ def run_main_temporal(
         period=12,
     )
 
-    # 3.2 Continuous organisations only
-    fig_cont_main = an_cont.create_main_plot(
-        show_shocks=True,
-        show_moving_average=True,
-        show_breakpoints=True,
-    )
-    
-    fig_cont_comp = an_cont.create_comprehensive_plot(
-        show_shocks=True,
-        show_moving_average=True,
-        show_breakpoints=True,
-        offset_components=False,
-    )
-
-    fig_cont_decomp = an_cont.create_seasonal_decomposition_plot(
-        model="additive",
-        period=12,
-    )
-
-    # 3.3 Participation bar charts (use string labels to avoid 2020.5, etc.)
-    fig_part_iso = create_participation_bar_chart(
-        df=results["participation"]["isolate_counts"],
-        x="Year",
-        y="IsolateCount",
-        title="Isolate counts by participation type",
-        y_title="Isolate count",
-    )
-    
-    fig_part_org = create_participation_bar_chart(
-        df=results["participation"]["organisation_counts"],
-        x="Year",
-        y="OrganisationCount",
-        title="Organisation counts by participation type",
-        y_title="Organisation count",
-    )
-    
-    
-    fig_org_line = create_participation_line_chart(
-        df=decomp_orgs,
-        x="Year",
-        y="OrganisationCount",
-        title="Trend in organisation participation types",
-        y_title="Number of organisations"
-    )
-    
-    
-    fig_iso_line = create_participation_line_chart(
-        df=decomp_counts,
-        x="Year",
-        y="IsolateCount",
-        title="Trend in isolate contributions by participation type",
-        y_title="Isolate count"
-    )
-    
-    # ---------------------------------------------
-    # 4. Advanced Participation Figures (NEW)
-    # ---------------------------------------------
-    # Ribbon charts
-    fig_ribbon_iso = fig_ribbon_isolate_counts_by_type(decomp_counts)
-    fig_ribbon_org = fig_ribbon_org_counts_by_type(decomp_orgs)
-
-
-
-
-    # Collect all figures in one dict (key → go.Figure)
     figures = {
         "figure_1_full_main_trends": fig_full_main,
         "figure_2_full_comprehensive": fig_full_comp,
         "figure_3_full_decomposition": fig_full_decomp,
-        "figure_4_continuous_main_trends": fig_cont_main,
-        "figure_5_continuous_comprehensive": fig_cont_comp,
-        "figure_6_continuous_decomposition": fig_cont_decomp,
-        "figure_7_participation_isolate_counts": fig_part_iso,
-        "figure_8_participation_organisation_counts": fig_part_org,
-        "figure_9_participation_organisation_trends": fig_org_line,
-        "figure_10_participation_isolate_trends": fig_iso_line,
-        # Participation – Extended
-        "temporal_participation_ribbon_isolates": fig_ribbon_iso,
-        "temporal_participation_ribbon_orgs": fig_ribbon_org,
     }
 
+    # If orgs exist, add continuous + participation figures
+    if has_orgs:
+        an_cont = results["continuous"]["analyzer"]
+        monthly_cont = results["continuous"]["monthly"]
+        shocks_cont = results["continuous"]["shocks"]
+        breaks_cont = results["continuous"]["breaks"]
+        amplitude_cont = results["continuous"]["amplitude"]
+
+        decomp_counts = results["participation"]["isolate_counts"].copy()
+        decomp_orgs = results["participation"]["organisation_counts"].copy()
+
+        # Continuous series figs
+        fig_cont_main = an_cont.create_main_plot(
+            show_shocks=True,
+            show_moving_average=True,
+            show_breakpoints=True,
+        )
+
+        fig_cont_comp = an_cont.create_comprehensive_plot(
+            show_shocks=True,
+            show_moving_average=True,
+            show_breakpoints=True,
+            offset_components=False,
+        )
+
+        fig_cont_decomp = an_cont.create_seasonal_decomposition_plot(
+            model="additive",
+            period=12,
+        )
+
+        # Participation figs
+        fig_part_iso = create_participation_bar_chart(
+            df=decomp_counts,
+            x="Year",
+            y="IsolateCount",
+            title="Isolate counts by participation type",
+            y_title="Isolate count",
+        )
+
+        fig_part_org = create_participation_bar_chart(
+            df=decomp_orgs,
+            x="Year",
+            y="OrganisationCount",
+            title="Organisation counts by participation type",
+            y_title="Organisation count",
+        )
+
+        fig_org_line = create_participation_line_chart(
+            df=decomp_orgs,
+            x="Year",
+            y="OrganisationCount",
+            title="Trend in organisation participation types",
+            y_title="Number of organisations"
+        )
+
+        fig_iso_line = create_participation_line_chart(
+            df=decomp_counts,
+            x="Year",
+            y="IsolateCount",
+            title="Trend in isolate contributions by participation type",
+            y_title="Isolate count"
+        )
+
+        fig_ribbon_iso = fig_ribbon_isolate_counts_by_type(decomp_counts)
+        fig_ribbon_org = fig_ribbon_org_counts_by_type(decomp_orgs)
+
+        figures.update({
+            "figure_4_continuous_main_trends": fig_cont_main,
+            "figure_5_continuous_comprehensive": fig_cont_comp,
+            "figure_6_continuous_decomposition": fig_cont_decomp,
+            "figure_7_participation_isolate_counts": fig_part_iso,
+            "figure_8_participation_organisation_counts": fig_part_org,
+            "figure_9_participation_organisation_trends": fig_org_line,
+            "figure_10_participation_isolate_trends": fig_iso_line,
+            "temporal_participation_ribbon_isolates": fig_ribbon_iso,
+            "temporal_participation_ribbon_orgs": fig_ribbon_org,
+        })
+    else:
+        # Placeholders so return tuple stays compatible
+        an_cont = None
+        monthly_cont = shocks_cont = breaks_cont = amplitude_cont = None
+
     # -------------------------------------------------------------------------
-    # 4. Export high-resolution figures
+    # 4. Export figures (always export what's in figures dict)
     # -------------------------------------------------------------------------
-    # Use the full-series analyzer's helper; it doesn't care which figures you pass.
     an_full.export_high_resolution_figures(
         base_path=f"{base_dir}/temporal",
         figures=figures,
@@ -2310,22 +2458,20 @@ def run_main_temporal(
     # -------------------------------------------------------------------------
     # 5. Export data tables
     # -------------------------------------------------------------------------
-    # Full series data
     an_full.export_data(f"{base_dir}/full")
 
-    # Continuous-only series data
-    an_cont.export_data(f"{base_dir}/continuous")
+    if has_orgs and an_cont is not None:
+        an_cont.export_data(f"{base_dir}/continuous")
 
     # -------------------------------------------------------------------------
-    # 6. Decomposition diagnostics (full series only, as before)
+    # 6. Decomposition diagnostics (full series only)
     # -------------------------------------------------------------------------
     summary_full, ljung_full, components_full = an_full.run_decomposition_diagnostics()
     components_full.to_csv(f"{base_dir}/full_components.csv", index=False)
 
     # -------------------------------------------------------------------------
-    # 7. Return (keep original shape for compatibility)
+    # 7. Return (backward compatible)
     # -------------------------------------------------------------------------
-    # monthly_full, shocks_full, breaks_full, amplitude_full, figures, components_full
     return (
         monthly_full,
         shocks_full,
