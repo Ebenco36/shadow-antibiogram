@@ -144,5 +144,31 @@ def main():
     run_main_temporal(df=new_df)
     logger.info("+++++++++++++++++++++ DONE RUNNING TEMPORAL  ++++++++++++++++++++++++")
 
+    ##########################################################################
+    ########### RUN THE CODE FOR CONTINUOUS PARTICIPATION USE CASE ###########
+    ##########################################################################
+    
+    from src.controllers.AMR.use_cases.helper import filter_continuous_organisations
+    df = new_df
+    if "NumberOrganisation" in df.columns.to_list():
+        res = filter_continuous_organisations(
+            df,
+            org_col="NumberOrganisation",
+            year_col="Year",       # will use if present
+            date_col="Date",       # used only if Year missing
+            min_year=2019,
+            max_year=2023,
+            verbose=True,
+        )
+
+        df_cont = res.df_continuous
+        orgs = res.continuous_orgs
+
+        print(f"Continuous organisations: {len(orgs)}")
+        print(f"Isolates retained: {len(df_cont):,}")
+
+        run_two_key_use_cases(df_cont, Path("results_use_cases_continuous"))
+        run_main_temporal(df=df_cont, base_dir="./publication_outputs/manuscript/continuous_temporal")
+
 if __name__ == "__main__":
     main()

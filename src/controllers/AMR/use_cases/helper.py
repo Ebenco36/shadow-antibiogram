@@ -1,7 +1,8 @@
+from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional,Tuple, List, Iterable
 
 import pandas as pd
 
@@ -16,6 +17,116 @@ from src.controllers.AMR.use_cases.config_similarity import (
     BEST_TAU,
     BEST_GAMMA,
 )
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class ContinuousFilterResult:
+    df_continuous: pd.DataFrame
+    continuous_orgs: list[str]
+    year_range: Tuple[int, int]
+    org_col: str
+    year_col: str
+
+
+def _ensure_year_column(
+    df: pd.DataFrame,
+    *,
+    year_col: str = "Year",
+    date_col: Optional[str] = "Date",
+) -> pd.DataFrame:
+    """
+    Ensure df has an integer Year column.
+    Priority: existing year_col -> derive from date_col.
+    """
+    out = df.copy()
+
+    if year_col in out.columns and out[year_col].notna().any():
+        out[year_col] = pd.to_numeric(out[year_col], errors="coerce").astype("Int64")
+        return out
+
+    if date_col is None or date_col not in out.columns:
+        raise ValueError(
+            f"Cannot create '{year_col}'. Provide a valid date_col. "
+            f"Missing '{year_col}' and '{date_col}'."
+        )
+
+    out[date_col] = pd.to_datetime(out[date_col], errors="coerce")
+    out = out.dropna(subset=[date_col]).copy()
+    out[year_col] = out[date_col].dt.year.astype("Int64")
+    return out
+
+
+def filter_continuous_organisations(
+    df: pd.DataFrame,
+    *,
+    org_col: str = "NumberOrganisation",
+    year_col: str = "Year",
+    date_col: Optional[str] = "Date",
+    min_year: int = 2019,
+    max_year: int = 2023,
+    keep_only_year_span: bool = True,
+    verbose: bool = True,
+) -> ContinuousFilterResult:
+    """
+    Return isolates from organisations that appear in every year in [min_year, max_year].
+
+    Notes
+    - Uses year_col if present; otherwise derives year_col from date_col.
+    - Organisation IDs are coerced to string for stable grouping.
+    """
+    if df is None or df.empty:
+        raise ValueError("Input dataframe is empty.")
+
+    if org_col not in df.columns:
+        raise ValueError(f"Organisation column not found: '{org_col}'")
+
+    work = _ensure_year_column(df, year_col=year_col, date_col=date_col)
+
+    # Drop rows missing org/year
+    work = work.dropna(subset=[org_col, year_col]).copy()
+
+    # Restrict to year span for the continuous definition
+    span = set(range(min_year, max_year + 1))
+    work[year_col] = pd.to_numeric(work[year_col], errors="coerce").astype("Int64")
+    work = work[work[year_col].between(min_year, max_year, inclusive="both")].copy()
+
+    # Normalise org ids
+    work[org_col] = work[org_col].astype(str)
+
+    if work.empty:
+        if verbose:
+            print("After dropping NA org/year and restricting to the year span, dataframe is empty.")
+            print(f"Check: org_col='{org_col}', year_col='{year_col}', date_col='{date_col}'")
+        return ContinuousFilterResult(work, [], (min_year, max_year), org_col, year_col)
+
+    # Compute year coverage per org
+    years_by_org = work.groupby(org_col)[year_col].agg(lambda s: set(int(x) for x in s.dropna().unique()))
+    continuous_orgs = sorted([org for org, ys in years_by_org.items() if span.issubset(ys)])
+
+    df_cont = work[work[org_col].isin(continuous_orgs)].copy()
+
+    if keep_only_year_span:
+        df_cont = df_cont[df_cont[year_col].between(min_year, max_year, inclusive="both")].copy()
+
+    if verbose:
+        observed_years = sorted(work[year_col].dropna().unique().tolist())
+        print(f"Observed years in data (after cleaning): {observed_years[:10]}{'...' if len(observed_years) > 10 else ''}")
+        print(f"Target continuous span: {min_year}-{max_year} ({len(span)} years)")
+        print(f"Total organisations in span: {work[org_col].nunique():,}")
+        print(f"Continuous organisations: {len(continuous_orgs):,}")
+        print(f"Isolates retained (continuous): {len(df_cont):,}")
+
+        if len(continuous_orgs) == 0:
+            # Helpful diagnostics: how many years do orgs typically cover?
+            coverage = years_by_org.apply(len)
+            print("No continuous orgs found. Coverage distribution (#years per org) in span:")
+            print(coverage.value_counts().sort_index())
+
+    return ContinuousFilterResult(df_cont, continuous_orgs, (min_year, max_year), org_col, year_col)
+
+
 
 
 def build_and_save_network_for_cohort(
