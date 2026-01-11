@@ -66,7 +66,8 @@ class TemporalAntibioticLineChartPlotly:
             print(f"[WARN] Missing columns ignored: {missing}")
         valid = [a for a in antibiotics if a in self.antibiotic_cols]
         if not valid:
-            raise ValueError("None of the requested antibiotics exist in the dataset.")
+            pass
+            # raise ValueError("None of the requested antibiotics exist in the dataset.")
         return valid
 
     def aggregate_monthly(self, antibiotics: list[str]) -> pd.DataFrame:
@@ -148,7 +149,7 @@ class TemporalAntibioticLineChartPlotly:
 
         # Keep monthly resolution but rotate labels when dense
         fig.update_xaxes(
-            dtick="M1",
+            dtick="M3",
             tickformat=tick_fmt,
             tickangle=tick_angle,
             showgrid=True,
@@ -185,7 +186,8 @@ class TemporalAntibioticLineChartPlotly:
             present = (df[cols].notna().sum() / len(df)).fillna(0.0)
             cols = [c for c in cols if present.get(c, 0.0) >= min_presence_ratio]
             if not cols:
-                raise ValueError("No antibiotics meet the presence filter.")
+                pass
+                # raise ValueError("No antibiotics meet the presence filter.")
 
         totals = df[cols].sum(numeric_only=True).sort_values(ascending=False)
         return totals.head(top_n).index.tolist()

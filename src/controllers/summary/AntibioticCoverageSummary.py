@@ -282,7 +282,8 @@ class AntibioticCoverageSummary:
                 keep = self.resolve_to_columns(antibiotics_to_plot)
             abx_cols_like = [c for c in abx_cols_like if c in keep]
             if not abx_cols_like:
-                raise ValueError("None of the requested antibiotics/classes matched the dataframe.")
+                pass
+                # raise ValueError("None of the requested antibiotics/classes matched the dataframe.")
 
         # ---------- helpers ----------
         def _national_population_for_year():

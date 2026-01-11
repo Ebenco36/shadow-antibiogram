@@ -859,6 +859,7 @@ def get_continuous_organisations(
     df = df.copy()
     df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
     df = df.dropna(subset=[date_col])
+    df = df.dropna(subset=[org_col])
     
     min_year, max_year = _infer_year_range(df, date_col, min_year, max_year)
 
@@ -900,6 +901,8 @@ def label_participation_types(
     df["Year"] = df[date_col].dt.year
     mask = (df["Year"] >= min_year) & (df["Year"] <= max_year)
     df = df.loc[mask]
+
+    df = df.dropna(subset=[org_col])
 
     # Per-organisation participation interval
     org_year_stats = df.groupby(org_col)["Year"].agg(["min", "max", "nunique"]).rename(
