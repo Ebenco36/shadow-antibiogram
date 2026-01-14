@@ -166,6 +166,8 @@ def main():
 
         print(f"Continuous organisations: {len(orgs)}")
         print(f"Isolates retained: {len(df_cont):,}")
+        continuous_participation_percentage = len(df_cont)/len(df) * 100
+        print(f"Percentage of isolates retained after accounting for continuous participation: {continuous_participation_percentage:.2f}%")
 
         run_two_key_use_cases(df_cont, Path("results_use_cases_continuous"))
         run_main_temporal(df=df_cont, base_dir="./publication_outputs/manuscript/continuous_temporal")
