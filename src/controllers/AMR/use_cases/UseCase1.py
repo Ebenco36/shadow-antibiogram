@@ -114,7 +114,7 @@ class TemporalCohortCreator:
         self.logger.info("=" * 80)
 
         available_years = self._get_available_years()
-
+        self.logger.info(f"Available years: {available_years}")
         for year in available_years:
             for specimen_key, context in self.specimen_contexts.items():
                 # Pre-check sample size in the *raw* df to avoid calling generator unnecessarily
@@ -129,7 +129,10 @@ class TemporalCohortCreator:
                 )
 
                 sample_size = int((year_mask & genus_mask & specimen_mask).sum())
-
+                self.logger.info(
+                    f"DEBUG 2021: specimen_key={specimen_key} specimens={context.specimens} "
+                    f"genus={self.pathogen_genus} sample_size={sample_size} min_required={context.min_sample_size}"
+                )
                 if sample_size < context.min_sample_size:
                     self.logger.info(
                         f"  ✗ Skipping {year} {specimen_key}: N={sample_size} "
@@ -197,6 +200,12 @@ class TemporalCohortCreator:
 
         return df
 
+def debug_year_presence(df, label):
+    print(f"\n--- {label} ---")
+    print("years:", sorted(df["Year"].dropna().unique().tolist()))
+    print("counts by year:")
+    print(df["Year"].value_counts(dropna=False).sort_index())
+
 
 def run_temporal_use_case(
     df: pd.DataFrame,
@@ -212,7 +221,20 @@ def run_temporal_use_case(
 
     # 1) Base generator
     generator = ProductionCohortGenerator(df)
+    
+    debug_year_presence(df, "RAW INPUT")
+    df_prod = generator.df
+    debug_year_presence(df_prod, "AFTER ProductionCohortGenerator")
 
+    print("2021 raw matching counts:")
+    print(
+        df_prod.assign(YearN=pd.to_numeric(df_prod["Year"], errors="coerce").astype("Int64"))
+            .query("YearN == 2021")
+            .groupby(["PathogenGenus","TextMaterialgroupRkiL0"]) 
+            .size()
+            .sort_values(ascending=False)
+            .head(30)
+    )
     # 2) Temporal cohort creator
     logger = setup_logging(output_dir / "temporal")
     temporal_creator = TemporalCohortCreator(generator, logger=logger)
