@@ -12,8 +12,8 @@ if "NumberOrganisation" in df.columns.to_list():
         org_col="NumberOrganisation",
         year_col="Year",       # will use if present
         date_col="Date",       # used only if Year missing
-        min_year=2020,
-        max_year=2022,
+        min_year=2019,
+        max_year=2023,
         verbose=True,
     )
 
