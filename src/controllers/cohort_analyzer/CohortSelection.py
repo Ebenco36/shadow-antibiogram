@@ -190,28 +190,64 @@ class ProductionCohortGenerator:
         try:
             logger.info(f"Creating cohort: {config.name}")
             
+            logger.info(
+                f"[{config.name}] config snapshot: "
+                f"pathogens={config.pathogens} "
+                f"genus={config.pathogen_genus} "
+                f"isolate_group={config.isolate_group} "
+                f"specimens={config.specimens} "
+                f"gram_type={config.gram_type} "
+                f"care_type={config.care_type} "
+                f"ward_type={config.ward_type} "
+                f"care_complexity={config.care_complexity} "
+                f"hospital_level={config.hospital_level} "
+                f"age_groups={config.age_groups} "
+                f"sex={config.sex} "
+                f"years={config.years} months={config.months} "
+                f"regions={config.regions} "
+                f"min_sample_size={config.min_sample_size} "
+                f"remove_untested_abx={config.remove_untested_abx}"
+            )
             # Start with all data
-            mask = pd.Series([True] * len(self.df))
-            
-            # Apply filters in logical order
-            mask = self._apply_pathogen_filters(mask, config)  # Filter by pathogen name/gram type
-            mask = self._apply_isolate_filters(mask, config)   # Filter by deduplication status
-            mask = self._apply_specimen_filters(mask, config)  # Filter by specimen
-            mask = self._apply_sex_filters(mask, config)  # Filter by Sex
-            mask = self._apply_demographic_filters(mask, config) # Filter by patient demo
+            # mask = pd.Series([True] * len(self.df))
+            mask = pd.Series(True, index=self.df.index)
+            self._log_mask_step(config.name, "start", mask)
+
+            mask = self._apply_pathogen_filters(mask, config)
+            self._log_mask_step(config.name, "after_pathogen", mask)
+
+            mask = self._apply_isolate_filters(mask, config)
+            self._log_mask_step(config.name, "after_isolate", mask)
+
+            mask = self._apply_specimen_filters(mask, config)
+            self._log_mask_step(config.name, "after_specimen", mask)
+
+            mask = self._apply_sex_filters(mask, config)
+            self._log_mask_step(config.name, "after_sex", mask)
+
+            mask = self._apply_demographic_filters(mask, config)
+            self._log_mask_step(config.name, "after_demographic", mask)
+
             mask = self._apply_care_complexity_filters(mask, config)
+            self._log_mask_step(config.name, "after_care_complexity", mask)
+
             mask = self._apply_hospital_level_filters(mask, config)
+            self._log_mask_step(config.name, "after_hospital_level", mask)
 
             temporal_mask = self._apply_temporal_filters(mask, config)
             if temporal_mask is None:
-                logger.warning(f"Cohort '{config.name}' returned no data due to temporal filter (e.g., requested years not found).")
+                logger.warning(f"[{config.name}] temporal filter returned None")
                 return None
             mask = temporal_mask
-            
-            mask = self._apply_geographic_filters(mask, config)
+            self._log_mask_step(config.name, "after_temporal", mask)
 
-            # Apply final mask
-            cohort_df = self.df[mask].copy()
+            mask = self._apply_geographic_filters(mask, config)
+            self._log_mask_step(config.name, "after_geographic", mask)
+
+            cohort_df = self.df.loc[mask].copy()
+            logger.info(f"[{config.name}] final cohort rows={len(cohort_df):,}")
+            self._log_dedup_distribution(config.name, mask)
+
             
             # Check sample size
             if len(cohort_df) < config.min_sample_size:
@@ -291,29 +327,67 @@ class ProductionCohortGenerator:
 
     def _apply_isolate_filters(self, mask: pd.Series, config: CohortConfig) -> pd.Series:
         """Apply isolate group (deduplication) filters"""
-        
-        if config.isolate_group:
-            for group_col in config.isolate_group:
-                if group_col in self.df.columns:
-                    mask &= (self.df[group_col] == 'Erstisolat')
-                    logger.debug(f"Filtered by isolate group: {group_col} == 'Erstisolat'")
-                else:
-                    logger.warning(f"Isolate group column '{group_col}' not in DataFrame.")
-        
+
+        if not config.isolate_group:
+            logger.info(f"[{config.name}] isolate filter: none (config.isolate_group is empty)")
+            return mask
+
+        for group_col in config.isolate_group:
+            if group_col not in self.df.columns:
+                logger.warning(f"[{config.name}] isolate filter: column '{group_col}' not in DataFrame")
+                continue
+
+            # count before/after on the CURRENT mask
+            before = int(mask.fillna(False).astype(bool).sum())
+
+            col = self.df[group_col]
+            # be robust to weird types / missing values
+            is_first = (col.astype("string") == "Erstisolat")
+
+            mask = mask & is_first
+
+            after = int(mask.fillna(False).astype(bool).sum())
+
+            # log both the effect and a quick sanity distribution for that col within the cohort
+            logger.info(
+                f"[{config.name}] isolate filter {group_col}=='Erstisolat': "
+                f"{before:,} -> {after:,} (dropped {before-after:,})"
+            )
+
         return mask
-    
+
+    def _log_dedup_distribution(self, cohort_name: str, mask: pd.Series) -> None:
+        cols = [c for c in ["CSY", "CSYMG", "CSQ", "CSQMG"] if c in self.df.columns]
+        if not cols:
+            return
+
+        sub = self.df.loc[mask, cols].astype("string")
+        for c in cols:
+            vc = sub[c].value_counts(dropna=False).head(5).to_dict()
+            logger.info(f"[{cohort_name}] dedup dist within mask: {c} top={vc}")
+
+
     def _apply_specimen_filters(self, mask: pd.Series, config: CohortConfig) -> pd.Series:
-        """Apply specimen-related filters"""
-        if config.specimens:
-            specimen_values = config.specimens if isinstance(config.specimens, list) else [config.specimens]
-            valid_specimens = [s for s in specimen_values if s in self.available_specimens]
-            if valid_specimens:
-                mask &= self.df['TextMaterialgroupRkiL0'].isin(valid_specimens)
-                logger.debug(f"Filtered by specimens: {valid_specimens}")
-            else:
-                logger.warning(f"No valid specimens found in: {specimen_values}. Available: {self.available_specimens}")
-        
+        if not config.specimens:
+            logger.info(f"[{config.name}] specimen filter: none (config.specimens is empty)")
+            return mask
+
+        specimen_values = config.specimens if isinstance(config.specimens, list) else [config.specimens]
+        valid_specimens = [s for s in specimen_values if s in self.available_specimens]
+
+        if not valid_specimens:
+            logger.warning(
+                f"[{config.name}] specimen filter: no valid specimens in {specimen_values}. "
+                f"Available examples={self.available_specimens[:10]}"
+            )
+            return mask
+
+        before = int(mask.fillna(False).astype(bool).sum())
+        mask = mask & self.df['TextMaterialgroupRkiL0'].isin(valid_specimens)
+        after = int(mask.fillna(False).astype(bool).sum())
+        logger.info(f"[{config.name}] specimen filter {valid_specimens}: {before:,} -> {after:,}")
         return mask
+
     
     def _apply_sex_filters(self, mask: pd.Series, config: CohortConfig) -> pd.Series:
         """Apply specimen-related filters"""
@@ -356,35 +430,65 @@ class ProductionCohortGenerator:
         
         return mask
     
+    def _log_mask_step(self, cohort_name: str, step: str, mask: pd.Series) -> None:
+        try:
+            same_index = mask.index.equals(self.df.index)
+            # handle dtype quirks
+            n_true = int(mask.fillna(False).astype(bool).sum())
+            logger.info(
+                f"[{cohort_name}] {step}: kept={n_true:,}/{len(self.df):,} "
+                f"({(n_true/len(self.df)) if len(self.df) else 0:.2%}) "
+                f"index_ok={same_index} mask_index={type(mask.index).__name__} df_index={type(self.df.index).__name__}"
+            )
+            if not same_index:
+                logger.warning(f"[{cohort_name}] INDEX MISMATCH at step '{step}'")
+        except Exception as e:
+            logger.warning(f"[{cohort_name}] failed logging step '{step}': {e}")
+            
+
     def _apply_temporal_filters(self, mask: pd.Series, config: CohortConfig) -> Optional[pd.Series]:
         """Apply temporal filters (Years, Months)"""
-        
+
         if 'Year' not in self.df.columns or 'Month' not in self.df.columns:
             logger.warning("Year or Month column not present, skipping temporal filters.")
             return mask
-            
+
         year_col  = pd.to_numeric(self.df['Year'],  errors='coerce').astype('Int64')
         month_col = pd.to_numeric(self.df['Month'], errors='coerce').astype('Int64')
 
+        # ---- Years ----
         if config.years is not None and len(config.years) > 0:
             wanted_years = list(dict.fromkeys(config.years))
             available_years_set = set(year_col.dropna().unique().tolist())
-            
+            available_years_sorted = sorted(available_years_set)
+
             effective_years = [y for y in wanted_years if y in available_years_set]
-            
+
+            logger.info(
+                f"[{config.name}] temporal: wanted_years={wanted_years} "
+                f"effective_years={effective_years} "
+                f"available_years={available_years_sorted}"
+            )
+
             if not effective_years:
-                logger.warning(f"None of the requested years {wanted_years} are present in the data.")
-                return None 
+                logger.warning(f"[{config.name}] None of the requested years {wanted_years} are present in the data.")
+                return None
 
+            before = int(mask.fillna(False).astype(bool).sum())
             mask = mask & year_col.isin(effective_years)
-            logger.debug(f"Filtered by Years: {effective_years}")
+            after = int(mask.fillna(False).astype(bool).sum())
+            logger.info(f"[{config.name}] temporal year filter: {before:,} -> {after:,}")
 
+        # ---- Months ----
         if config.months is not None and len(config.months) > 0:
             wanted_months = list(dict.fromkeys(config.months))
+            before = int(mask.fillna(False).astype(bool).sum())
             mask = mask & month_col.isin(wanted_months)
-            logger.debug(f"Filtered by Months: {wanted_months}")
+            after = int(mask.fillna(False).astype(bool).sum())
+            logger.info(f"[{config.name}] temporal month filter: {before:,} -> {after:,}")
 
         return mask
+
 
     def _apply_geographic_filters(self, mask: pd.Series, config: CohortConfig) -> pd.Series:
         """Apply geographic filters"""

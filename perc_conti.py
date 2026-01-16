@@ -29,7 +29,7 @@ if "NumberOrganisation" in df.columns.to_list():
     print(f"Percentage of isolates retained after filtering: {continuous_participation_perctage:.2f}%")
     
     run_two_key_use_cases(df_cont, Path("results_use_cases_continuous"))
-    run_main_temporal(df=df_cont, base_dir="./publication_outputs/manuscript/continuous_temporal")
+    # run_main_temporal(df=df_cont, base_dir="./publication_outputs/manuscript/continuous_temporal")
 
 else:
     print("NumberOrganisation column not found in dataframe.")
