@@ -197,3 +197,5 @@ results_use_cases_/
 full_paper
 .paper
 WHO_Aware_data_*
+datasets/WHO_Aware_data.tar.xz
+outputs.tar.xz
