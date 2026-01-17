@@ -31,8 +31,8 @@ All commands below assume execution from the repository root directory.
 The dataset used in this study is publicly available via **Zenodo**.
 
 **Zenodo record**
-DOI: `10.5281/zenodo.17939410`
-File: `WHO_Aware_data.zip`
+DOI: `10.5281/zenodo.18274234`
+File: `WHO_Aware_data.tar.xz`
 
 The archive contains preprocessed antimicrobial susceptibility testing metadata required to reproduce all analyses reported in the manuscript. No patient-identifiable data are included.
 
@@ -42,20 +42,20 @@ From the repository root directory:
 
 ```bash
 mkdir -p datasets && \
-wget -O datasets/WHO_Aware_data.zip \
-"https://zenodo.org/record/17939410/files/WHO_Aware_data.zip" && \
-unzip datasets/WHO_Aware_data.zip -d datasets/ && \
-rm datasets/WHO_Aware_data.zip
+wget -O datasets/WHO_Aware_data.tar.xz \
+"https://zenodo.org/records/18274234/files/WHO_Aware_data.tar.xz?download=1" && \
+tar -xf datasets/WHO_Aware_data.tar.xz -C . --strip-components=1 && \
+rm datasets/WHO_Aware_data.tar.xz
 ```
 
 Alternatively, using `curl`:
 
 ```bash
 mkdir -p datasets && \
-curl -L -o datasets/WHO_Aware_data.zip \
-"https://zenodo.org/record/17939410/files/WHO_Aware_data.zip" && \
-unzip datasets/WHO_Aware_data.zip -d datasets/ && \
-rm datasets/WHO_Aware_data.zip
+curl -L -o datasets/WHO_Aware_data.tar.xz \
+"https://zenodo.org/records/18274234/files/WHO_Aware_data.tar.xz?download=1" && \
+tar -xf datasets/WHO_Aware_data.tar.xz -C . --strip-components=1 && \
+rm datasets/WHO_Aware_data.tar.xz
 ```
 
 After extraction, the expected path is:
