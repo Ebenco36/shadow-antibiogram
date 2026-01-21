@@ -1252,7 +1252,7 @@ class VisualizationManager:
             pdf_name = f"{base_name}.pdf"
             gexf_name = f"{base_name}.gexf"
 
-            title = f"{genus} – {material} – {metric} (tau={tau:.2f}, gamma={gamma:.2f})"
+            title = "" # f"{genus} – {material} – {metric} (tau={tau:.2f}, gamma={gamma:.2f})"
 
             visualize_antibiotic_network(
                 data_input=sim_for_viz,
@@ -1364,10 +1364,10 @@ class VisualizationManager:
             pdf_name = f"{base_name}_original.pdf"
             gexf_name = f"{base_name}_original.gexf"
 
-            title = (
-                f"{genus} – {material} – {metric} "
-                f"(tau={tau:.2f}, gamma={gamma:.2f}, seed={self.config.random_seed})"
-            )
+            title = "" # (
+            #    f"{genus} – {material} – {metric} "
+            #    f"(tau={tau:.2f}, gamma={gamma:.2f}, seed={self.config.random_seed})"
+            # )
 
             visualize_antibiotic_graph_from_partition(
                 G=G,
@@ -1518,10 +1518,10 @@ class VisualizationManager:
             pdf_name = f"net_{base}.pdf"
             gexf_name = f"net_{base}.gexf"
 
-            title = (
-                f"{genus} – {material} – {metric} "
-                f"(tau={tau:.2f}, gamma={gamma:.2f}) – [FDR-pruned = {self.fdr_alpha}]"
-            )
+            title = "" # (
+            #     f"{genus} – {material} – {metric} "
+            #     f"(tau={tau:.2f}, gamma={gamma:.2f}) – [FDR-pruned = {self.fdr_alpha}]"
+            # )
 
             visualize_antibiotic_network(
                 data_input=sim_for_viz,
@@ -1535,6 +1535,28 @@ class VisualizationManager:
                 title=title,
                 remove_isolated=False,
             )
+            # Create a new subfolder inside the same folder
+            networks_dir_default = networks_dir / "default_param"
+            networks_dir_default.mkdir(parents=True, exist_ok=True)
+
+            # Use different filenames so you don't overwrite the first set
+            html_name_def = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.html"
+            png_name_def  = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.png"
+            pdf_name_def  = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.pdf"
+            gexf_name_def = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.gexf"
+
+            visualize_antibiotic_network(
+                data_input=sim_for_viz,
+                threshold=0.3,
+                community_gamma=1,
+                output_dir=str(networks_dir_default),
+                output_html=html_name_def,
+                output_image=png_name_def,
+                output_pdf=pdf_name_def,
+                gexf_path=gexf_name_def,
+                title=title,
+                remove_isolated=False,
+)
             
     def export_fdr_edge_statistics(self, output_path: Path):
         """

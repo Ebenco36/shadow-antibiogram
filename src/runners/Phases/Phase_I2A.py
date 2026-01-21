@@ -128,7 +128,11 @@ class TemporalAntibioticLineChartPlotly:
 
         # -------- Layout --------
         fig.update_layout(
-            title=title,
+            # title=title,
+            title=dict(
+                text=(title or ""),
+                font=dict(size=28, family="Arial", color="black")
+            ),
             showlegend=True,
             xaxis_title="Month",
             yaxis_title="Isolate Count",
@@ -154,9 +158,15 @@ class TemporalAntibioticLineChartPlotly:
             tickangle=tick_angle,
             showgrid=True,
             ticks="outside",
-            automargin=True
+            automargin=True,
+            tickfont=dict(size=20),
+            title_font=dict(size=24)
         )
-        fig.update_yaxes(showgrid=True, zeroline=True)
+        fig.update_yaxes(
+            showgrid=True, zeroline=True,
+            tickfont=dict(size=20),
+            title_font=dict(size=24)
+        )
         return fig
 
     

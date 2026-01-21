@@ -305,7 +305,7 @@ class AMRTestingPatternAnalysis:
             )
         )
         # Force x-axis slant when horizontal
-        if orientation == "horizontal":
+        if orientation == "vertical":
             chart = chart.configure_axisX(labelAngle=45)
 
 

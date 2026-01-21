@@ -806,7 +806,7 @@ def plot_tests_boxplot(
         x=0.5
     ),
     title: str = "",
-    # NEW — optional class awareness (antibiotic-level mode only)
+    # optional class awareness (antibiotic-level mode only)
     # maps raw *_Tested column -> class name
     antibiotic_class_map: Optional[Dict[str, str]] = None,
     # maps class name -> color
@@ -1273,8 +1273,8 @@ def plot_tests_boxplot(
         legend_title_text="Legend",
         legend=dict(
             **legend_cfg,
-            font=dict(size=18),
-            title=dict(font=dict(size=20)),
+            font=dict(size=20),
+            title=dict(font=dict(size=24)),
         )
     )
 
@@ -1282,15 +1282,15 @@ def plot_tests_boxplot(
     fig.update_xaxes(
         tickangle=45, categoryorder="array",
         categoryarray=new_order, automargin=True,
-        tickfont=dict(size=18),
-        title_font=dict(size=22)
+        tickfont=dict(size=20),
+        title_font=dict(size=24)
     )
     
     fig.update_yaxes(
         zeroline=True, zerolinewidth=2, zerolinecolor="LightGrey",
         range=yaxis_range, rangemode="tozero" if yaxis_range is None else "normal",
-        tickfont=dict(size=18),
-        title_font=dict(size=22)
+        tickfont=dict(size=20),
+        title_font=dict(size=24)
     )
     
     return fig
