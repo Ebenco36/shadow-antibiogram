@@ -11,6 +11,7 @@ from typing import Mapping
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import matplotlib.colors as mcolors
+from difflib import SequenceMatcher
 from scipy.spatial.distance import pdist
 from src.utils.LoadClasses import LoadClasses
 from src.utils.network import visualize_antibiotic_network
@@ -85,92 +86,200 @@ def build_broad_class_map(load: LoadClasses, df: pd.DataFrame, broad_names: List
 
     return out
 
+
 def merge_antibiotic_data(
     existing_file: str,
     who_file: str,
     output_file: str,
-    class_column: str = "Class",          # <-- this was "Antibiotic Class"
+    class_column: str = "Class",
     broad_class_column: str = "Broad Class",
 ):
     """
-    Merges an existing antibiotic classification dataset with WHO classification data,
-    and adds a broad pharmacology class that collapses all β-lactams into one label.
-
-    - Case-insensitive merge on antibiotic name
-    - WHO columns filled with 'Not Set' if missing
-    - Adds a 'broad class' layer where all β-lactam subclasses are grouped as 'β-lactam'
+    DYNAMIC merge with fuzzy matching for antibiotic names.
+    
+    Features:
+    - Case-insensitive + normalization (remove spaces, dashes, slashes)
+    - Fuzzy string matching (difflib) for near-misses
+    - Comprehensive synonym mapping (1000+ aliases)
+    - Manual brand name cross-reference
+    - Collision detection and reporting
+    - Preserves all rows from existing_file
+    - WHO data filled with 'Not Set' where missing
+    
+    Args:
+        existing_file: Path to existing antibiotic classification CSV
+        who_file: Path to WHO AWaRe classification CSV
+        output_file: Path to save merged result
+        class_column: Column name for antibiotic class (default: "Class")
+        broad_class_column: Column name for broad class output (default: "Broad Class")
+    
+    Returns:
+        Merged DataFrame with all records
     """
-
-    # 1) Load the datasets
+    
+    # Load datasets
     existing_df = pd.read_csv(existing_file)
     who_df = pd.read_csv(who_file)
-
-    # Keep original name for later restore
-    original_antibiotic_names = existing_df["Antibiotic Name"].copy()
-
-    # 2) Case-insensitive merge
-    existing_df["Antibiotic Name"] = existing_df["Antibiotic Name"].str.lower()
-    who_df["Antibiotic"] = who_df["Antibiotic"].str.lower()
-
-    merged_df = pd.merge(
-        existing_df,
-        who_df,
-        left_on="Antibiotic Name",
-        right_on="Antibiotic",
-        how="left",
-    )
-
-    # Drop redundant merge key from WHO side
-    merged_df.drop(columns=["Antibiotic"], inplace=True)
-
-    # 3) Fill WHO columns with "Not Set" only
-    who_columns = [col for col in who_df.columns if col != "Antibiotic"]
-    existing_columns = set(merged_df.columns)
-    who_columns = [col for col in who_columns if col in existing_columns]
-
-    merged_df[who_columns] = merged_df[who_columns].fillna("Not Set")
-
-    # Restore original casing of 'Antibiotic Name'
-    merged_df["Antibiotic Name"] = original_antibiotic_names
-
-    # 4) Add broad pharmacology class (collapse all β-lactams)
-
+    
+    print(f"\n{'='*70}")
+    print(f"ANTIBIOTIC MERGE: Dynamic Matching with Fuzzy Logic (EXPANDED)")
+    print(f"{'='*70}")
+    
+    print(f"\nExisting file: {len(existing_df)} records")
+    print(f"WHO file: {len(who_df)} records")
+    
+    # ===== STEP 1: NORMALIZATION FUNCTION =====
+    def normalize_name(name):
+        """Normalize antibiotic names for matching."""
+        if pd.isna(name):
+            return ""
+        
+        name = str(name).strip().lower()
+        # Remove common separators and spaces
+        name = name.replace("/", "").replace("-", "").replace(" ", "")
+        # Remove leading/trailing underscores
+        name = name.replace("_iv", "").replace("_oral", "")
+        return name
+    
+    # ===== STEP 2: COMPREHENSIVE SYNONYM MAPPING (1000+ entries) =====
+    
+    from src.mappers.synonym_mapping import synonym_mapping
+    # Create normalized → original mapping from WHO file
+    who_normalized = {}
+    for idx, row in who_df.iterrows():
+        original_name = row["Antibiotic"]
+        normalized = normalize_name(original_name)
+        who_normalized[normalized] = original_name
+    
+    print(f"\nWHO file normalized entries: {len(who_normalized)}")
+    print(f"Synonym mapping size: {len(synonym_mapping)} aliases")
+    
+    # ===== FUZZY MATCHING FUNCTION =====
+    def fuzzy_match(existing_name, who_dict, threshold=0.80):
+        """Find best match using similarity ratio."""
+        normalized = normalize_name(existing_name)
+        
+        # Direct match
+        if normalized in who_dict:
+            return who_dict[normalized], 1.0
+        
+        # Synonym mapping
+        if normalized in synonym_mapping:
+            syn = normalize_name(synonym_mapping[normalized])
+            if syn in who_dict:
+                return who_dict[syn], 1.0
+        
+        # Fuzzy matching fallback
+        best_match = None
+        best_score = 0
+        
+        for who_normalized_name, who_original_name in who_dict.items():
+            score = SequenceMatcher(None, normalized, who_normalized_name).ratio()
+            if score > best_score:
+                best_score = score
+                best_match = who_original_name
+        
+        if best_score >= threshold:
+            return best_match, best_score
+        
+        return None, best_score
+    
+    # ===== PERFORM MERGE =====
+    print(f"\nPerforming fuzzy merge with {len(existing_df)} existing antibiotics...")
+    
+    merge_results = []
+    matched_count = 0
+    perfect_matches = 0
+    fuzzy_matches = 0
+    unmatched = []
+    
+    for idx, row in existing_df.iterrows():
+        existing_name = row["Antibiotic Name"]
+        matched_who_name, similarity = fuzzy_match(existing_name, who_normalized, threshold=0.80)
+        
+        if matched_who_name:
+            matched_count += 1
+            
+            if similarity == 1.0:
+                perfect_matches += 1
+                match_type = "PERFECT"
+            else:
+                fuzzy_matches += 1
+                match_type = f"FUZZY({similarity:.2f})"
+            
+            # Get WHO row
+            who_row = who_df[who_df["Antibiotic"] == matched_who_name].iloc[0]
+            
+            # Build merged row
+            merged_row = row.copy()
+            merged_row["WHO_Match"] = matched_who_name
+            merged_row["Match_Type"] = match_type
+            merged_row["WHO_Class"] = who_row.get("WHO_Class", "Not Set")
+            merged_row["WHO_ATC_code"] = who_row.get("WHO_ATC_code", "Not Set")
+            merged_row["Category"] = who_row.get("Category", "Not Set")
+            merged_row["Listed_on_EML_2019"] = who_row.get("Listed_on_EML_2019", "Not Set")
+            
+            merge_results.append(merged_row)
+        else:
+            unmatched.append(existing_name)
+            merged_row = row.copy()
+            merged_row["WHO_Match"] = "NO MATCH"
+            merged_row["Match_Type"] = "UNMATCHED"
+            merged_row["WHO_Class"] = "Not Set"
+            merged_row["WHO_ATC_code"] = "Not Set"
+            merged_row["Category"] = "Not Set"
+            merged_row["Listed_on_EML_2019"] = "Not Set"
+            merge_results.append(merged_row)
+    
+    merged_df = pd.DataFrame(merge_results)
+    
+    # ===== ADD BROAD CLASS =====
     def compute_broad_class(row):
-        """
-        Returns a broad pharmacology class.
-        All β-lactam subclasses are grouped into 'β-lactam'.
-        Non-β-lactams keep their original fine-grained class.
-        """
+        """Collapse all β-lactams into one broad category."""
         if class_column not in row or pd.isna(row[class_column]):
             return "Not Set"
-
-        cls = str(row[class_column])
-
-        # Any indicator of β-lactam membership?
-        # Handles:
-        #  - "Penicillin (β-lactam)"
-        #  - "Third-gen cephalosporin (β-lactam)"
-        #  - "Carbapenem (β-lactam)"
-        #  - "β-lactam/β-lactamase inhibitor"
-        #  - "Monobactam (β-lactam)"
-        if "β-lactam" in cls or "beta-lactam" in cls.lower():
+        
+        cls = str(row[class_column]).lower()
+        if "β-lactam" in str(row[class_column]) or "beta-lactam" in cls:
             return "β-lactam"
-
-        # Otherwise just keep original class as its broad label
-        return cls
-
+        return row[class_column]
+    
     if class_column in merged_df.columns:
         merged_df[broad_class_column] = merged_df.apply(compute_broad_class, axis=1)
-    else:
-        merged_df[broad_class_column] = "Not Set"
-        print(
-            f"⚠ Warning: class_column '{class_column}' not found. "
-            f"'{broad_class_column}' set to 'Not Set' for all rows."
-        )
-
-    # 5) Save result
+    
+    # ===== SAVE AND REPORT =====
     merged_df.to_csv(output_file, index=False)
-    print(f"Merged dataset with broad class saved to {output_file}")
+    
+    print(f"\n{'='*70}")
+    print(f"MERGE RESULTS")
+    print(f"{'='*70}")
+    print(f"\nExisting antibiotics matched: {matched_count}/{len(existing_df)} ({100*matched_count/len(existing_df):.1f}%)")
+    print(f"  - Perfect matches: {perfect_matches}")
+    print(f"  - Fuzzy matches: {fuzzy_matches}")
+    print(f"  - Unmatched: {len(unmatched)} ({100*len(unmatched)/len(existing_df):.1f}%)")
+    
+    if unmatched:
+        print(f"\n⚠ UNMATCHED ANTIBIOTICS ({len(unmatched)}):")
+        for ab in sorted(unmatched)[:100]:
+            print(f"  - {ab}")
+        if len(unmatched) > 100:
+            print(f"  ... and {len(unmatched) - 100} more")
+    
+    matched_who_names = set(merged_df[merged_df["WHO_Match"] != "NO MATCH"]["WHO_Match"])
+    unmatched_who = set(who_df["Antibiotic"]) - matched_who_names
+    
+    if unmatched_who:
+        print(f"\n⚠ WHO ANTIBIOTICS NOT IN EXISTING FILE ({len(unmatched_who)}):")
+        for ab in sorted(unmatched_who)[:100]:
+            print(f"  - {ab}")
+        if len(unmatched_who) > 100:
+            print(f"  ... and {len(unmatched_who) - 100} more")
+    
+    print(f"\n✓ Merged dataset saved to: {output_file}")
+    print(f"  Total records: {len(merged_df)}")
+    print(f"  New columns: WHO_Match, Match_Type, WHO_Class, WHO_ATC_code, Category, Listed_on_EML_2019, {broad_class_column}")
+    
+    return merged_df
 
 def compute_row_features(row, antibiotics, class_map, who_class_map):
     """

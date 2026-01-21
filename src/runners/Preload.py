@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # 2) Merge antibiotic metadata (kept at the old path your code expects)
     merge_antibiotic_data(
         existing_file="./datasets/antibiotic_classification_complete_original.csv",
-        who_file="./datasets/AWaRe Classification 2019.csv",
+        who_file="./datasets/AWaRe Classification 2023.csv",
         output_file="./datasets/antibiotic_classification_complete.csv",
     )
 

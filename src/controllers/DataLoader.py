@@ -79,6 +79,7 @@ class DataLoader:
 
         # ---- Artifact cleanup (defensive) ----
         artifact_cols = [c for c in self.df.columns if c.endswith("_Tested_Outcome")]
+        print(artifact_cols)
         if artifact_cols:
             # These should never exist; drop if present
             self.df = self.df.drop(columns=artifact_cols, errors="ignore")
@@ -100,12 +101,13 @@ class DataLoader:
 
         # Pairs that exist for both tested & outcome
         self.paired_bases = sorted(set(self.tested_bases).intersection(self.outcome_bases))
-
+        # print(self.paired_bases)
         # Meta columns = everything else
         self.meta_cols = [c for c in self.all_cols if c not in (self.abx_tested_cols + self.abx_outcome_cols)]
-
+        # print((self.abx_tested_cols + self.abx_outcome_cols))
         # Optional sanity check (default on): ensure outcome <NA> whenever tested == 0
         self._sanity_check_outcomes()
+        # print((self.abx_tested_cols + self.abx_outcome_cols))
 
     # ---------- internals ----------
     def _present(self, cols: List[str]) -> List[str]:
@@ -154,9 +156,12 @@ class DataLoader:
             if bad_mask.any():
                 if raise_on_violation:
                     n_bad = int(bad_mask.sum())
+                    # print(f"[{base}] Found {n_bad} rows where {tcol}==0 but {ycol} is not NaN.")
                     raise AssertionError(f"[{base}] Found {n_bad} rows where {tcol}==0 but {ycol} is not NaN.")
                 # fix in-place
                 self.df.loc[bad_mask, ycol] = pd.NA
+                # print(f"[{base}] Found {n_bad} rows where {tcol}==0 but {ycol} is not NaN.")
+                
 
     # ---------- public API ----------
     def load_abx_classes(self):
@@ -217,5 +222,7 @@ class DataLoader:
         abx_selected = access + watch + reserve
         if use_not_set:
             abx_selected += self.get_abx_by_category(["Not Set"], return_which=return_which, use_not_set=True)
+        print("Does LoadClasses know SXT base?", "SXT - Co-Trimoxazol" in abx_selected)
+        print(self.get_abx_by_category(["Access", "Watch", "Reserve"]))
 
         return self.df[self._present(self.meta_cols + abx_selected)]

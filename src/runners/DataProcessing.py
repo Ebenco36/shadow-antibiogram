@@ -336,6 +336,10 @@ class DataProcessing:
         # Save flat parquet dataset
         out_dir = Path("./datasets") / "structured/dataset_parquet"
         save_parquet_flat(self.data, out_dir, rows_per_file=250_000, compression="zstd")
+        run_full_descriptor(
+            self.data, name="AMR_2025Q1_COMPLETE_STRUCTURED_FILTERED",
+            out_root="reports/CompleteData_Structured_Filtered"
+        )
         print(f"[OK] Saved Parquet dataset to: {out_dir}")
 
         # Save unique lists
