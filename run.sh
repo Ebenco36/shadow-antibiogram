@@ -181,9 +181,9 @@ fi
 
 # ---------------- modules to run (edit as needed) ----------------
 MODULES=(
-  # "src.runners.Preload" # optional data preloading. Not needed since we already have preprocessed data.
-  # "src.runners.DataProcessing" # optional full data processing. Not needed since we already have preprocessed data.
-  # "src.runners.GenerateTables"
+  "src.runners.Preload" # optional data preloading. Not needed since we already have preprocessed data.
+  "src.runners.DataProcessing" # optional full data processing. Not needed since we already have preprocessed data.
+  "src.runners.GenerateTables"
   "src.controllers.AMR.scripts.run_comprehensive_analysis"
   "src.runners.CompleteTemporalAnalysis"
   "src.runners.SummaryStatistics"

@@ -1,0 +1,359 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 1200px;
+                 background-color: white;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "AMC (mixed)", "label": "AMC (mixed)", "shape": "dot", "size": 18, "title": "Antibiotic: AMC (mixed)\nCommunity: 1\nDegree: 10"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "AMP (mixed)", "label": "AMP (mixed)", "shape": "dot", "size": 25, "title": "Antibiotic: AMP (mixed)\nCommunity: 2\nDegree: 17"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "AMS (mixed)", "label": "AMS (mixed)", "shape": "dot", "size": 24, "title": "Antibiotic: AMS (mixed)\nCommunity: 2\nDegree: 16"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "AMX (mixed)", "label": "AMX (mixed)", "shape": "dot", "size": 11, "title": "Antibiotic: AMX (mixed)\nCommunity: 1\nDegree: 2"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "SXT (mixed)", "label": "SXT (mixed)", "shape": "dot", "size": 26, "title": "Antibiotic: SXT (mixed)\nCommunity: 2\nDegree: 18"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "CAZ (-ve)", "label": "CAZ (-ve)", "shape": "dot", "size": 24, "title": "Antibiotic: CAZ (-ve)\nCommunity: 2\nDegree: 16"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "CEP (mixed)", "label": "CEP (mixed)", "shape": "dot", "size": 15, "title": "Antibiotic: CEP (mixed)\nCommunity: 1\nDegree: 6"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "CRO (-ve)", "label": "CRO (-ve)", "shape": "dot", "size": 25, "title": "Antibiotic: CRO (-ve)\nCommunity: 2\nDegree: 17"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "CXM (-ve)", "label": "CXM (-ve)", "shape": "dot", "size": 24, "title": "Antibiotic: CXM (-ve)\nCommunity: 2\nDegree: 16"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "IMP (mixed)", "label": "IMP (mixed)", "shape": "dot", "size": 24, "title": "Antibiotic: IMP (mixed)\nCommunity: 2\nDegree: 16"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "LEV (mixed)", "label": "LEV (mixed)", "shape": "dot", "size": 23, "title": "Antibiotic: LEV (mixed)\nCommunity: 2\nDegree: 15"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "AMK (-ve)", "label": "AMK (-ve)", "shape": "dot", "size": 10, "title": "Antibiotic: AMK (-ve)\nCommunity: 1\nDegree: 1"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "TOB (-ve)", "label": "TOB (-ve)", "shape": "dot", "size": 11, "title": "Antibiotic: TOB (-ve)\nCommunity: 1\nDegree: 2"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "GEN (-ve)", "label": "GEN (-ve)", "shape": "dot", "size": 24, "title": "Antibiotic: GEN (-ve)\nCommunity: 2\nDegree: 16"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "CPO (-ve)", "label": "CPO (-ve)", "shape": "dot", "size": 24, "title": "Antibiotic: CPO (-ve)\nCommunity: 2\nDegree: 16"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "CTX (-ve)", "label": "CTX (-ve)", "shape": "dot", "size": 24, "title": "Antibiotic: CTX (-ve)\nCommunity: 2\nDegree: 16"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "ERT (mixed)", "label": "ERT (mixed)", "shape": "dot", "size": 25, "title": "Antibiotic: ERT (mixed)\nCommunity: 2\nDegree: 17"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "MER (mixed)", "label": "MER (mixed)", "shape": "dot", "size": 25, "title": "Antibiotic: MER (mixed)\nCommunity: 2\nDegree: 17"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "MOX (mixed)", "label": "MOX (mixed)", "shape": "dot", "size": 21, "title": "Antibiotic: MOX (mixed)\nCommunity: 2\nDegree: 13"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "PIP (mixed)", "label": "PIP (mixed)", "shape": "dot", "size": 23, "title": "Antibiotic: PIP (mixed)\nCommunity: 2\nDegree: 15"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "PIT (mixed)", "label": "PIT (mixed)", "shape": "dot", "size": 20, "title": "Antibiotic: PIT (mixed)\nCommunity: 2\nDegree: 12"}, {"borderWidth": 2, "color": {"background": "#D55E00", "border": "black", "highlight": {"background": "#D55E00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "TGC (mixed)", "label": "TGC (mixed)", "shape": "dot", "size": 23, "title": "Antibiotic: TGC (mixed)\nCommunity: 2\nDegree: 15"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 2, "id": "CIP (-ve)", "label": "CIP (-ve)", "shape": "dot", "size": 20, "title": "Antibiotic: CIP (-ve)\nCommunity: 2\nDegree: 12"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 5, "id": "CLI (+ve)", "label": "CLI (+ve)", "shape": "dot", "size": 15, "title": "Antibiotic: CLI (+ve)\nCommunity: 5\nDegree: 6"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 5, "id": "OXA (+ve)", "label": "OXA (+ve)", "shape": "dot", "size": 13, "title": "Antibiotic: OXA (+ve)\nCommunity: 5\nDegree: 4"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 5, "id": "COX (mixed)", "label": "COX (mixed)", "shape": "dot", "size": 12, "title": "Antibiotic: COX (mixed)\nCommunity: 5\nDegree: 3"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 5, "id": "ERY (mixed)", "label": "ERY (mixed)", "shape": "dot", "size": 15, "title": "Antibiotic: ERY (mixed)\nCommunity: 5\nDegree: 6"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 5, "id": "PEN (+ve)", "label": "PEN (+ve)", "shape": "dot", "size": 15, "title": "Antibiotic: PEN (+ve)\nCommunity: 5\nDegree: 6"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 5, "id": "TPL (+ve)", "label": "TPL (+ve)", "shape": "dot", "size": 13, "title": "Antibiotic: TPL (+ve)\nCommunity: 5\nDegree: 4"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 5, "id": "VAN (+ve)", "label": "VAN (+ve)", "shape": "dot", "size": 12, "title": "Antibiotic: VAN (+ve)\nCommunity: 5\nDegree: 3"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 6, "id": "CMP (mixed)", "label": "CMP (mixed)", "shape": "dot", "size": 10, "title": "Antibiotic: CMP (mixed)\nCommunity: 6\nDegree: 1"}, {"borderWidth": 2, "color": {"background": "#D55E00", "border": "black", "highlight": {"background": "#D55E00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 6, "id": "COL (-ve)", "label": "COL (-ve)", "shape": "dot", "size": 10, "title": "Antibiotic: COL (-ve)\nCommunity: 6\nDegree: 1"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "DOX (mixed)", "label": "DOX (mixed)", "shape": "dot", "size": 15, "title": "Antibiotic: DOX (mixed)\nCommunity: 1\nDegree: 6"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "MCL (-ve)", "label": "MCL (-ve)", "shape": "dot", "size": 16, "title": "Antibiotic: MCL (-ve)\nCommunity: 1\nDegree: 7"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "NFT (mixed)", "label": "NFT (mixed)", "shape": "dot", "size": 17, "title": "Antibiotic: NFT (mixed)\nCommunity: 1\nDegree: 8"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "TRP (-ve)", "label": "TRP (-ve)", "shape": "dot", "size": 15, "title": "Antibiotic: TRP (-ve)\nCommunity: 1\nDegree: 6"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "NOR (-ve)", "label": "NOR (-ve)", "shape": "dot", "size": 15, "title": "Antibiotic: NOR (-ve)\nCommunity: 1\nDegree: 6"}, {"borderWidth": 2, "color": {"background": "#D55E00", "border": "black", "highlight": {"background": "#D55E00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "AZT (-ve)", "label": "AZT (-ve)", "shape": "dot", "size": 16, "title": "Antibiotic: AZT (-ve)\nCommunity: 1\nDegree: 7"}, {"borderWidth": 2, "color": {"background": "#D55E00", "border": "black", "highlight": {"background": "#D55E00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "CZA (-ve)", "label": "CZA (-ve)", "shape": "dot", "size": 14, "title": "Antibiotic: CZA (-ve)\nCommunity: 1\nDegree: 5"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 1, "id": "CFA (-ve)", "label": "CFA (-ve)", "shape": "dot", "size": 11, "title": "Antibiotic: CFA (-ve)\nCommunity: 1\nDegree: 2"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 16, "id": "FUS (+ve)", "label": "FUS (+ve)", "shape": "dot", "size": 11, "title": "Antibiotic: FUS (+ve)\nCommunity: 16\nDegree: 2"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 16, "id": "RAM (+ve)", "label": "RAM (+ve)", "shape": "dot", "size": 11, "title": "Antibiotic: RAM (+ve)\nCommunity: 16\nDegree: 2"}, {"borderWidth": 2, "color": {"background": "#D55E00", "border": "black", "highlight": {"background": "#D55E00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 16, "id": "DPT (+ve)", "label": "DPT (+ve)", "shape": "dot", "size": 11, "title": "Antibiotic: DPT (+ve)\nCommunity: 16\nDegree: 2"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 3, "id": "CEX (+ve)", "label": "CEX (+ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: CEX (+ve)\nCommunity: 3\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 4, "id": "CEZ (+ve)", "label": "CEZ (+ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: CEZ (+ve)\nCommunity: 4\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 8, "id": "FLU (+ve)", "label": "FLU (+ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: FLU (+ve)\nCommunity: 8\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 9, "id": "MTR (mixed)", "label": "MTR (mixed)", "shape": "dot", "size": 10.0, "title": "Antibiotic: MTR (mixed)\nCommunity: 9\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#56B4E9", "border": "black", "highlight": {"background": "#56B4E9", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 10, "id": "TET (mixed)", "label": "TET (mixed)", "shape": "dot", "size": 10.0, "title": "Antibiotic: TET (mixed)\nCommunity: 10\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 11, "id": "AZM (mixed)", "label": "AZM (mixed)", "shape": "dot", "size": 10.0, "title": "Antibiotic: AZM (mixed)\nCommunity: 11\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 12, "id": "CEC (mixed)", "label": "CEC (mixed)", "shape": "dot", "size": 10.0, "title": "Antibiotic: CEC (mixed)\nCommunity: 12\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 13, "id": "CFI (-ve)", "label": "CFI (-ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: CFI (-ve)\nCommunity: 13\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 14, "id": "CLR (mixed)", "label": "CLR (mixed)", "shape": "dot", "size": 10.0, "title": "Antibiotic: CLR (mixed)\nCommunity: 14\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 15, "id": "CPP (-ve)", "label": "CPP (-ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: CPP (-ve)\nCommunity: 15\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 17, "id": "MZL (mixed)", "label": "MZL (mixed)", "shape": "dot", "size": 10.0, "title": "Antibiotic: MZL (mixed)\nCommunity: 17\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 18, "id": "OFX (-ve)", "label": "OFX (-ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: OFX (-ve)\nCommunity: 18\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#E69F00", "border": "black", "highlight": {"background": "#E69F00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 0, "id": "ROX (+ve)", "label": "ROX (+ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: ROX (+ve)\nCommunity: 0\nDegree: 0"}, {"borderWidth": 2, "color": {"background": "#D55E00", "border": "black", "highlight": {"background": "#D55E00", "border": "red"}}, "font": {"bold": true, "color": "black", "face": "Arial", "size": 22, "strokeColor": "#FFFFFF", "strokeWidth": 5}, "group": 7, "id": "LIZ (+ve)", "label": "LIZ (+ve)", "shape": "dot", "size": 10.0, "title": "Antibiotic: LIZ (+ve)\nCommunity: 7\nDegree: 0"}]);
+                  edges = new vis.DataSet([{"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "AMP (mixed)", "value": 0.30472094378680387, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "AMS (mixed)", "value": 0.33399570781336935, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "AMX (mixed)", "value": 0.4649920378075718, "width": 2.3224459946290326}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "SXT (mixed)", "value": 0.3735801266439357, "width": 1.2784101508983658}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "CAZ (-ve)", "value": 0.37566293459045375, "width": 1.2988074161120728}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "CEP (mixed)", "value": 0.3114485022568732, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.4009285447462511, "width": 1.5624874626184657}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.3779690738083851, "width": 1.321665364258272}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.35149049892904166, "width": 1.0807083913932811}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMC (mixed)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.4494106403313157, "width": 2.128304605973408}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMK (-ve)", "smooth": {"type": "continuous"}, "to": "TOB (-ve)", "value": 0.5626207340631036, "width": 3.635443342911747}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "AMS (mixed)", "value": 0.8499743275800782, "width": 8.109860661678495}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "GEN (-ve)", "value": 0.8557137813345886, "width": 8.205849880027479}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "SXT (mixed)", "value": 0.889340990947143, "width": 8.772478202495943}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "CAZ (-ve)", "value": 0.8799781990890334, "width": 8.613997115256574}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "CPO (-ve)", "value": 0.34869841528496354, "width": 1.0591351717671933}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.5960226125580457, "width": 4.1151867294589275}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "CTX (-ve)", "value": 0.8399778077197432, "width": 7.943190062032623}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.8902759397159619, "width": 8.788333590831837}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.6768066542328552, "width": 5.3256087126689495}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.89852416897369, "width": 8.928444052943348}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.45036538964829986, "width": 2.1400506385116715}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.8898836168307968, "width": 8.78167970243069}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.35534617827651915, "width": 1.1121358041927496}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7449568023316332, "width": 6.393726847437171}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.888443423767078, "width": 8.75726182208756}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMP (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6801509465259491, "width": 5.377087670933255}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "GEN (-ve)", "value": 0.8861723681134575, "width": 8.718783033081438}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "SXT (mixed)", "value": 0.9330645789514684, "width": 9.519613678449776}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "CIP (-ve)", "value": 0.932060563599564, "width": 9.502330421981174}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "CPO (-ve)", "value": 0.3801686231796361, "width": 1.3437224309975662}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.6593294401110793, "width": 5.058257399602075}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "CTX (-ve)", "value": 0.8569670690261338, "width": 8.2268389080902}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.9072403919200577, "width": 9.076953896368352}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.6118113865453598, "width": 4.346448843459692}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.48862337870617245, "width": 2.6260606075792214}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9329155557285483, "width": 9.517048002852938}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.35926275604449737, "width": 1.1456525439793228}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7092903123261544, "width": 5.829827569040439}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.9316633578574487, "width": 9.495494483956529}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMS (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6750171033039559, "width": 5.298103816693372}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "AMX (mixed)", "smooth": {"type": "continuous"}, "to": "CEP (mixed)", "value": 0.32494920479226513, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "CLI (+ve)", "smooth": {"type": "continuous"}, "to": "OXA (+ve)", "value": 0.32854209445585214, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "CLI (+ve)", "smooth": {"type": "continuous"}, "to": "COX (mixed)", "value": 0.32238193018480493, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "CLI (+ve)", "smooth": {"type": "continuous"}, "to": "ERY (mixed)", "value": 0.9527720739219713, "width": 9.86003485190571}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "CLI (+ve)", "smooth": {"type": "continuous"}, "to": "PEN (+ve)", "value": 0.9285714285714286, "width": 9.44231354624405}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "CLI (+ve)", "smooth": {"type": "continuous"}, "to": "TPL (+ve)", "value": 0.5124760076775432, "width": 2.942451200285727}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "CLI (+ve)", "smooth": {"type": "continuous"}, "to": "VAN (+ve)", "value": 0.3326256192498231, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "CMP (mixed)", "smooth": {"type": "continuous"}, "to": "COL (-ve)", "value": 0.5307167235494881, "width": 3.1904314172073405}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "DOX (mixed)", "smooth": {"type": "continuous"}, "to": "MCL (-ve)", "value": 0.4606881797111785, "width": 2.2683115976577017}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "DOX (mixed)", "smooth": {"type": "continuous"}, "to": "NFT (mixed)", "value": 0.3341436050860135, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "DOX (mixed)", "smooth": {"type": "continuous"}, "to": "TRP (-ve)", "value": 0.5479837999647825, "width": 3.4295822982131887}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "DOX (mixed)", "smooth": {"type": "continuous"}, "to": "NOR (-ve)", "value": 0.49914529914529915, "width": 2.7644703116542826}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "DOX (mixed)", "smooth": {"type": "continuous"}, "to": "AZT (-ve)", "value": 0.45288595271210014, "width": 2.171157191898867}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "DOX (mixed)", "smooth": {"type": "continuous"}, "to": "CZA (-ve)", "value": 0.5078140073316612, "width": 2.8798849129732624}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "SXT (mixed)", "value": 0.9508908577548437, "width": 9.827443676934557}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "CAZ (-ve)", "value": 0.9554875777006491, "width": 9.907114909136126}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "CIP (-ve)", "value": 0.9502539849360658, "width": 9.816414697051325}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "CPO (-ve)", "value": 0.3836685021147554, "width": 1.379307019162615}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.6677082276554732, "width": 5.1860740439042665}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "CTX (-ve)", "value": 0.8689794805902737, "width": 8.428525650292164}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.924661668776166, "width": 9.37514587484544}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.6196524197240858, "width": 4.462308142639756}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.9333019182815967, "width": 9.523700124413313}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.5080329743065166, "width": 2.882815889001632}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9509195290454413, "width": 9.827940243124134}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7192424032739566, "width": 5.986124294703295}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.9497070787675899, "width": 9.806945540142737}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "GEN (-ve)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6755713034477268, "width": 5.306618590980505}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "MCL (-ve)", "smooth": {"type": "continuous"}, "to": "NFT (mixed)", "value": 0.31807756463719766, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "MCL (-ve)", "smooth": {"type": "continuous"}, "to": "TRP (-ve)", "value": 0.6408612001832341, "width": 4.778905812657277}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "MCL (-ve)", "smooth": {"type": "continuous"}, "to": "CEP (mixed)", "value": 0.33996665972077517, "width": 1.0026302994650909}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "MCL (-ve)", "smooth": {"type": "continuous"}, "to": "NOR (-ve)", "value": 0.6999457406402605, "width": 5.683834887981881}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "MCL (-ve)", "smooth": {"type": "continuous"}, "to": "AZT (-ve)", "value": 0.7345360824742269, "width": 6.227904445039868}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "MCL (-ve)", "smooth": {"type": "continuous"}, "to": "CZA (-ve)", "value": 0.7169811320754716, "width": 5.950538532533035}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "NFT (mixed)", "smooth": {"type": "continuous"}, "to": "TRP (-ve)", "value": 0.40577556003822063, "width": 1.615949665308107}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "NFT (mixed)", "smooth": {"type": "continuous"}, "to": "CEP (mixed)", "value": 0.3020281883808869, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "NFT (mixed)", "smooth": {"type": "continuous"}, "to": "CFA (-ve)", "value": 0.36889031430404107, "width": 1.2334029542640805}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "NFT (mixed)", "smooth": {"type": "continuous"}, "to": "CPO (-ve)", "value": 0.31738113107589067, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "NFT (mixed)", "smooth": {"type": "continuous"}, "to": "NOR (-ve)", "value": 0.3129454313370918, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "NFT (mixed)", "smooth": {"type": "continuous"}, "to": "AZT (-ve)", "value": 0.33018280016618196, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "OXA (+ve)", "smooth": {"type": "continuous"}, "to": "ERY (mixed)", "value": 0.3390191897654584, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "OXA (+ve)", "smooth": {"type": "continuous"}, "to": "PEN (+ve)", "value": 0.3067226890756303, "width": 1.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "OXA (+ve)", "smooth": {"type": "continuous"}, "to": "TPL (+ve)", "value": 0.4351851851851852, "width": 1.9557846763382922}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "CAZ (-ve)", "value": 0.9891742440468078, "width": 10.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "CIP (-ve)", "value": 0.9973924380704041, "width": 10.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "CPO (-ve)", "value": 0.39873750657548657, "width": 1.5385911946398374}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.6484096531037572, "width": 4.8926823669974135}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "CTX (-ve)", "value": 0.9159205916699105, "width": 9.225303669960867}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.9723655767395665, "width": 10.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.6325027761002123, "width": 4.653584049313298}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.9651579480387956, "width": 10.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.512342431858476, "width": 2.940653814065649}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9982875046217915, "width": 10.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.35587507549632746, "width": 1.116574929948268}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7413467344513918, "width": 6.336183116253172}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.9969640354974311, "width": 10.0}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "SXT (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6871919742865491, "width": 5.485800348282673}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "TRP (-ve)", "smooth": {"type": "continuous"}, "to": "NOR (-ve)", "value": 0.6196319018404908, "width": 4.462004115483062}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "TRP (-ve)", "smooth": {"type": "continuous"}, "to": "AZT (-ve)", "value": 0.6288064014225383, "width": 4.598388815790816}, {"color": {"color": "#56B4E9", "highlight": "#56B4E9"}, "from": "TRP (-ve)", "smooth": {"type": "continuous"}, "to": "CZA (-ve)", "value": 0.6320346320346321, "width": 4.646585864944535}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "CIP (-ve)", "value": 0.9882858866338464, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "CPO (-ve)", "value": 0.3920298198708066, "width": 1.4665487442081555}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.6525042703159052, "width": 4.954633558327744}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.9627942293090357, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.635539331135186, "width": 4.6990309878183645}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.9562736161427291, "width": 9.920750607276508}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.5133862900853192, "width": 2.9547072655114386}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9894128408228402, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.3573335951305714, "width": 1.1289613581517464}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7328488202170567, "width": 6.201136998730953}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.98793398723338, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CAZ (-ve)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6916309939912815, "width": 5.554565377866604}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CEP (mixed)", "smooth": {"type": "continuous"}, "to": "TOB (-ve)", "value": 0.3865376154861417, "width": 1.4089020277254245}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CEP (mixed)", "smooth": {"type": "continuous"}, "to": "AZT (-ve)", "value": 0.32596966303573244, "width": 1.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CFA (-ve)", "smooth": {"type": "continuous"}, "to": "CPO (-ve)", "value": 0.36144780438703183, "width": 1.1649496021890358}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.6483428749464502, "width": 4.8916733729935835}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "CTX (-ve)", "value": 0.9157861965637344, "width": 9.223003354681923}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.9711038897861494, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.6319314641744548, "width": 4.645043931720279}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.9637492216687422, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.5119566910733759, "width": 2.9354648727996224}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9984433374844334, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CIP (-ve)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.9969645671589517, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "COX (mixed)", "smooth": {"type": "continuous"}, "to": "ERY (mixed)", "value": 0.33547008547008544, "width": 1.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "COX (mixed)", "smooth": {"type": "continuous"}, "to": "PEN (+ve)", "value": 0.3398268398268398, "width": 1.0020175972586085}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "CRO (-ve)", "value": 0.3941639888048098, "width": 1.4892823363615595}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "CTX (-ve)", "value": 0.4124221785818744, "width": 1.690529653083582}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.38711455913046905, "width": 1.4148974522838662}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.34774421741011224, "width": 1.052034560250847}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.3986865480966924, "width": 1.538037490439494}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.3840624722690567, "width": 1.3833487562868851}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.398571317346621, "width": 1.5367857673752319}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.4748297248963129, "width": 2.447566435189561}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CPO (-ve)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.38359044626615324, "width": 1.3785070935712547}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "CTX (-ve)", "value": 0.5884722469048043, "width": 4.005585636562234}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.6508880431335237, "width": 4.9301607181262135}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.494401925828356, "width": 2.701840993917867}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.6482048427497913, "width": 4.889587894220991}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.4908740874087409, "width": 2.6555081315108024}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.6481658071421621, "width": 4.888998153074731}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.3288863706603482, "width": 1.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.5591754738405101, "width": 3.586737637864647}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CRO (-ve)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.5267561132990677, "width": 3.136168717724509}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "CXM (-ve)", "value": 0.9169776303579538, "width": 9.24339974866061}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.6741740794481946, "width": 5.285156922695205}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.9001001944951965, "width": 8.955262825190548}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.4632289944011636, "width": 2.3002246843488283}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9168645156268245, "width": 9.241462953169636}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.3596998170630301, "width": 1.149480141812611}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7600900565951997, "width": 6.636054921031047}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.9159837262268595, "width": 9.226384322114805}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CTX (-ve)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6513934245587322, "width": 4.937810459716534}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CXM (-ve)", "smooth": {"type": "continuous"}, "to": "ERT (mixed)", "value": 0.6458599488981156, "width": 4.8541882632616735}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CXM (-ve)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9720362730598583, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CXM (-ve)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.3631206807014741, "width": 1.1799848368220487}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CXM (-ve)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7399174027308475, "width": 6.313428353913566}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CXM (-ve)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.9708263594254798, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "CXM (-ve)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6875136065865775, "width": 5.490776899634628}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERT (mixed)", "smooth": {"type": "continuous"}, "to": "IMP (mixed)", "value": 0.6348950241026254, "width": 4.6893800748706855}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERT (mixed)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.34714171153625845, "width": 1.0476316265120809}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERT (mixed)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.6321136629038536, "width": 4.647767123398833}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERT (mixed)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.3741811488278924, "width": 1.2842713046998602}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERT (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7287068564289738, "width": 6.1355245637031155}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERT (mixed)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.6317532037549176, "width": 4.642379931213531}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERT (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.5583961743608608, "width": 3.5757417301523877}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERY (mixed)", "smooth": {"type": "continuous"}, "to": "PEN (+ve)", "value": 0.9453781512605042, "width": 9.732054263140725}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERY (mixed)", "smooth": {"type": "continuous"}, "to": "TPL (+ve)", "value": 0.5227722772277228, "width": 3.0818186140573074}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "ERY (mixed)", "smooth": {"type": "continuous"}, "to": "VAN (+ve)", "value": 0.3248045486851457, "width": 1.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "FUS (+ve)", "smooth": {"type": "continuous"}, "to": "RAM (+ve)", "value": 0.75, "width": 6.474285825630209}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "FUS (+ve)", "smooth": {"type": "continuous"}, "to": "DPT (+ve)", "value": 1.0, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "IMP (mixed)", "smooth": {"type": "continuous"}, "to": "LEV (mixed)", "value": 0.5128460664527317, "width": 2.947432130865372}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "IMP (mixed)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.9649870574726066, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "IMP (mixed)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.3596570306709137, "width": 1.1491047074833178}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "IMP (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7531693661267747, "width": 6.525014089075764}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "IMP (mixed)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.9638143808151983, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "IMP (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6947633212881071, "width": 5.6031928816683845}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "LEV (mixed)", "smooth": {"type": "continuous"}, "to": "MER (mixed)", "value": 0.5119796025613578, "width": 2.9357730108383437}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "LEV (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.41113180672729266, "width": 1.675940491170915}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "LEV (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.3507114199899152, "width": 1.0745783188932216}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "MER (mixed)", "smooth": {"type": "continuous"}, "to": "MOX (mixed)", "value": 0.3556706047217735, "width": 1.1148553691191772}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "MER (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.7410571795570433, "width": 6.331572133932489}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "MER (mixed)", "smooth": {"type": "continuous"}, "to": "PIT (mixed)", "value": 0.997976181209621, "width": 10.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "MER (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6868163948464443, "width": 5.479990248222355}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "MOX (mixed)", "smooth": {"type": "continuous"}, "to": "PIP (mixed)", "value": 0.4322813437007674, "width": 1.9211699589911924}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "MOX (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.3568769468432649, "width": 1.1250609725934286}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "NOR (-ve)", "smooth": {"type": "continuous"}, "to": "AZT (-ve)", "value": 0.6819251896416427, "width": 5.404439836219975}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "NOR (-ve)", "smooth": {"type": "continuous"}, "to": "CZA (-ve)", "value": 0.8066891684565818, "width": 7.393023057765098}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "PEN (+ve)", "smooth": {"type": "continuous"}, "to": "TPL (+ve)", "value": 0.5229540918163673, "width": 3.084293950667089}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "PEN (+ve)", "smooth": {"type": "continuous"}, "to": "VAN (+ve)", "value": 0.3205401563610519, "width": 1.0}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "PIP (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6102736269282251, "width": 4.323804361734869}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "PIT (mixed)", "smooth": {"type": "continuous"}, "to": "TGC (mixed)", "value": 0.6861637914248997, "width": 5.469897658084706}, {"color": {"color": "#E69F00", "highlight": "#E69F00"}, "from": "RAM (+ve)", "smooth": {"type": "continuous"}, "to": "DPT (+ve)", "value": 0.75, "width": 6.474285825630209}, {"color": {"color": "#D55E00", "highlight": "#D55E00"}, "from": "AZT (-ve)", "smooth": {"type": "continuous"}, "to": "CZA (-ve)", "value": 0.8060847313050896, "width": 7.38310405400941}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "forceAtlas2Based": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.01,
+            "damping": 0.4,
+            "gravitationalConstant": -50,
+            "springConstant": 0.08,
+            "springLength": 120
+        },
+        "solver": "forceAtlas2Based",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+<div style="position:fixed;right:16px;bottom:16px;z-index:9999;background:rgba(0,0,0,0.65);padding:10px;border-radius:8px;color:#fff;font-family:system-ui,Arial,sans-serif;">
+  <div style="margin-bottom:6px;font-weight:600;">Recorder</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button id="startRecBtn">Start</button>
+    <button id="stopRecBtn" disabled>Stop & Download</button>
+    <button id='saveHiResBtn'>Save High-Res PNG</button>
+  </div>
+  <div id="recStatus" style="margin-top:6px;font-size:12px;opacity:0.9;"></div>
+  <div style="margin-top:6px;font-size:11px;opacity:0.85;">mode: webm, fps: 20, scale: 3</div>
+</div>
+
+<script>
+(function() {
+  const MODE = "webm";
+  const DURATION_MS = 8000;
+  const FPS = 20;
+  const SCALE = 3;
+  const UPSCALE_WEBM = true;
+  const HIRESPNG_SCALE = 3;
+  const HIRESPNG_NAME = "network_highres.png";
+
+  const statusEl = document.getElementById('recStatus');
+  const startBtn = document.getElementById('startRecBtn');
+  const stopBtn = document.getElementById('stopRecBtn');
+  const saveBtn = document.getElementById('saveHiResBtn');
+
+  function findCanvas() {
+    const cvs = Array.from(document.querySelectorAll('canvas')).filter(c => c.offsetWidth && c.offsetHeight);
+    if (!cvs.length) return null;
+    cvs.sort((a,b) => (b.width*b.height) - (a.width*a.height));
+    return cvs[0];
+  }
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+  function dataURLtoBlob(dataURL) {
+    const arr = dataURL.split(','), mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]); let n = bstr.length; const u8 = new Uint8Array(n);
+    while(n--) u8[n] = bstr.charCodeAt(n);
+    return new Blob([u8], {type:mime});
+  }
+  function makeHiResCanvas(canvas, scale) {
+    const c = document.createElement('canvas');
+    const w = canvas.width * scale;
+    const h = canvas.height * scale;
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    return [c, ctx, w, h];
+  }
+
+  let rec=null, chunks=[], frames=[], frameTimer=null, copyTimer=null, autoStopTimer=null;
+  let srcCanvas=null, hiC=null, hiCtx=null, hiW=0, hiH=0;
+
+  function copyToHiRes() {
+    try {
+      hiCtx.clearRect(0,0,hiW,hiH);
+      hiCtx.drawImage(srcCanvas, 0, 0, hiW, hiH);
+    } catch(e) { console.error(e); }
+  }
+
+  if (saveBtn) {
+    saveBtn.onclick = () => {
+      const canvas = findCanvas();
+      if (!canvas) { alert('No canvas found.'); return; }
+      const [c, ctx, w, h] = makeHiResCanvas(canvas, HIRESPNG_SCALE);
+      try {
+        ctx.drawImage(canvas, 0, 0, w, h);
+        const dataURL = c.toDataURL('image/png');
+        downloadBlob(dataURLtoBlob(dataURL), HIRESPNG_NAME);
+        statusEl.textContent = `Saved high-res PNG: ${w}x${h}`;
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = 'High-res PNG save failed.';
+      }
+    };
+  }
+
+  startBtn.onclick = () => {
+    srcCanvas = findCanvas();
+    if (!srcCanvas) { alert('No canvas found to record.'); return; }
+    [hiC, hiCtx, hiW, hiH] = makeHiResCanvas(srcCanvas, SCALE);
+
+    startBtn.disabled = true; stopBtn.disabled = false;
+
+    if (MODE === 'webm') {
+      chunks = [];
+      if (UPSCALE_WEBM) {
+        const stream = hiC.captureStream(FPS);
+        const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m => MediaRecorder.isTypeSupported(m));
+        rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+        rec.ondataavailable = e => e.data && chunks.push(e.data);
+        rec.onstop = () => downloadBlob(new Blob(chunks, { type:'video/webm' }), 'network_hi.webm');
+        rec.start(Math.max(1, Math.floor(1000/FPS)));
+        const interval = Math.max(1, Math.floor(1000 / FPS));
+        copyTimer = setInterval(copyToHiRes, interval);
+      } else {
+        const stream = srcCanvas.captureStream(FPS);
+        const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m => MediaRecorder.isTypeSupported(m));
+        rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+        rec.ondataavailable = e => e.data && chunks.push(e.data);
+        rec.onstop = () => downloadBlob(new Blob(chunks, { type:'video/webm' }), 'network.webm');
+        rec.start(Math.max(1, Math.floor(1000/FPS)));
+      }
+      statusEl.textContent = 'Recording video...';
+      autoStopTimer = setTimeout(() => {
+        if (rec && rec.state==='recording') rec.stop();
+        if (copyTimer) clearInterval(copyTimer);
+        stopBtn.disabled = true; startBtn.disabled = false;
+        statusEl.textContent = 'Saved video.';
+      }, 8000);
+
+    } else if (MODE === 'png_seq' || MODE === 'apng') {
+      frames = [];
+      const interval = Math.max(1, Math.floor(1000 / FPS));
+      const capture = () => {
+        try {
+          copyToHiRes();
+          if (MODE === 'png_seq') {
+            frames.push(hiC.toDataURL('image/png'));
+          } else {
+            const img = hiCtx.getImageData(0,0,hiW,hiH);
+            frames.push(img.data.buffer);
+          }
+        } catch(e) { console.error(e); }
+      };
+      frameTimer = setInterval(capture, interval);
+      statusEl.textContent = MODE==='apng' ? 'Capturing frames for APNG (hi-res)...' : 'Capturing PNG frames (hi-res)...';
+      autoStopTimer = setTimeout(() => stopBtn.click(), 8000);
+    }
+  };
+
+  stopBtn.onclick = async () => {
+    stopBtn.disabled = true; startBtn.disabled = false;
+
+    if (MODE === 'webm') {
+      if (rec && rec.state === 'recording') { rec.stop(); statusEl.textContent='Stopping...'; }
+      if (autoStopTimer) clearTimeout(autoStopTimer);
+      if (copyTimer) clearInterval(copyTimer);
+
+    } else if (MODE === 'png_seq') {
+      if (frameTimer) clearInterval(frameTimer);
+      if (autoStopTimer) clearTimeout(autoStopTimer);
+      statusEl.textContent = 'Packaging frames (ZIP)...';
+      if (!window.JSZip) { alert('JSZip not available.'); statusEl.textContent='JSZip missing.'; return; }
+      const zip = new JSZip();
+      for (let i=0;i<frames.length;i++) {
+        const base64 = frames[i].split(',')[1];
+        zip.file(`frame_${String(i).padStart(4,'0')}.png`, base64, {base64:true});
+      }
+      const blob = await zip.generateAsync({ type:'blob' });
+      downloadBlob(blob, 'frames_hi.zip');
+      statusEl.textContent = `Saved ${frames.length} frames.`;
+      frames = [];
+
+    } else if (MODE === 'apng') {
+      if (frameTimer) clearInterval(frameTimer);
+      if (autoStopTimer) clearTimeout(autoStopTimer);
+      if (!window.UPNG) { alert('UPNG.js not available.'); statusEl.textContent='UPNG missing.'; return; }
+      statusEl.textContent = 'Encoding APNG (hi-res)...';
+      const delay = Math.max(1, Math.floor(1000 / FPS));
+      const delays = new Array(frames.length).fill(delay);
+      try {
+        const apng = UPNG.encode(frames, hiW, hiH, 0, delays); // 0 -> lossless RGBA
+        const blob = new Blob([apng], { type:'image/png' });
+        downloadBlob(blob, 'network_animated_hi.png');
+        statusEl.textContent = `Saved APNG with ${frames.length} frames.`;
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = 'APNG encode failed.';
+      }
+      frames = [];
+    }
+  };
+})();
+</script>
+
+</body></html>

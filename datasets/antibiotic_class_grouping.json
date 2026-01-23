@@ -1,10 +1,10 @@
 {
   "Fluoroquinolone": [
-    "MOX - Moxifloxacin_Tested",
-    "LEV - Levofloxacin_Tested",
-    "NOR - Norfloxacin_Tested",
     "OFX - Ofloxacin_Tested",
-    "CIP - Ciprofloxacin_Tested"
+    "LEV - Levofloxacin_Tested",
+    "MOX - Moxifloxacin_Tested",
+    "CIP - Ciprofloxacin_Tested",
+    "NOR - Norfloxacin_Tested"
   ],
   "Aminoglycoside": [
     "AMK - Amikacin_Tested",
@@ -12,13 +12,13 @@
     "GEN - Gentamicin_Tested"
   ],
   "Penicillin (\u03b2-lactam)": [
+    "PIP - Piperacillin_Tested",
+    "AMX - Amoxicillin_Tested",
+    "AMP - Ampicillin_Tested",
+    "FLU - Flucloxacillin_Tested",
+    "PEN - Penicillin_Tested",
     "OXA - Oxacillin_Tested",
     "MCL - Mecillinam_Tested",
-    "PEN - Penicillin_Tested",
-    "AMX - Amoxicillin_Tested",
-    "FLU - Flucloxacillin_Tested",
-    "AMP - Ampicillin_Tested",
-    "PIP - Piperacillin_Tested",
     "MZL - Mezlocillin_Tested"
   ],
   "\u03b2-lactam/\u03b2-lactamase inhibitor": [
@@ -31,26 +31,27 @@
     "AZT - Aztreonam_Tested"
   ],
   "Third-gen cephalosporin (\u03b2-lactam)": [
-    "CAZ - Ceftazidim_Tested",
     "CTX - Cefotaxim_Tested",
-    "CPP - Cefpodoxim-Proxetil_Tested",
     "CRO - Ceftriaxon_Tested",
-    "CFI - Cefixim_Tested"
+    "CAZ - Ceftazidim_Tested",
+    "CFI - Cefixim_Tested",
+    "CPO - Cefpodoxim_Tested",
+    "CPP - Cefpodoxim-Proxetil_Tested"
   ],
   "Fourth-gen cephalosporin (\u03b2-lactam)": [
     "CEP - Cefepim_Tested"
   ],
   "First-gen cephalosporin (\u03b2-lactam)": [
     "CEZ - Cefazolin_Tested",
-    "CEX - Cefalexin_Tested",
-    "CFR - Cefadroxil_Tested"
+    "CFR - Cefadroxil_Tested",
+    "CEX - Cefalexin_Tested"
   ],
   "Amphenicol": [
     "CMP - Chloramphenicol_Tested"
   ],
   "Tetracycline": [
-    "DOX - Doxycyclin_Tested",
-    "TET - Tetracyclin_Tested"
+    "TET - Tetracyclin_Tested",
+    "DOX - Doxycyclin_Tested"
   ],
   "Lincosamide": [
     "CLI - Clindamycin_Tested"
@@ -59,25 +60,26 @@
     "COL - Colistin_Tested"
   ],
   "Glycopeptide": [
-    "TPL - Teicoplanin_Tested",
-    "VAN - Vancomycin_Tested"
+    "VAN - Vancomycin_Tested",
+    "TPL - Teicoplanin_Tested"
   ],
   "Lipopeptide": [
     "DPT - Daptomycin_Tested"
   ],
   "Second-gen cephalosporin (\u03b2-lactam)": [
-    "CXM - Cefuroxim_Tested",
+    "CFA - Cefuroxim-Axetil_Tested",
     "CEC - Cefaclor_Tested",
+    "CXM - Cefuroxim_Tested",
     "COX - Cefoxitin_Tested"
   ],
   "Oxazolidinone": [
     "LIZ - Linezolid_Tested"
   ],
   "Macrolide": [
-    "ERY - Erythromycin_Tested",
     "AZM - Azithromycin_Tested",
-    "ROX - Roxithromycin_Tested",
-    "CLR - Clarithromycin_Tested"
+    "CLR - Clarithromycin_Tested",
+    "ERY - Erythromycin_Tested",
+    "ROX - Roxithromycin_Tested"
   ],
   "Nitrofuran": [
     "NFT - Nitrofurantoin_Tested"
@@ -89,9 +91,9 @@
     "TGC - Tigecyclin_Tested"
   ],
   "Carbapenem (\u03b2-lactam)": [
-    "IMP - Imipenem_Tested",
+    "MER - Meropenem_Tested",
     "ERT - Ertapenem_Tested",
-    "MER - Meropenem_Tested"
+    "IMP - Imipenem_Tested"
   ],
   "Steroid antibiotic": [
     "FUS - Fusidic acid_Tested"
