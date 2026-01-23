@@ -1,0 +1,82 @@
+
+Ecoli Urin care type(Hospital/Community)
+
+Hospital/Inpatient
+--------------------------------
+Central hub
+AMP, MER, CIP, MCL, CXM, CFA, SXT, NFT, ERT, CEP, CPO, PIT, LEV, CTX, CAZ, AMC, TRP
+
+Tier connected to central
+Tier 1: PIP, CFI, MOX, GEN, TGC, AMS, IMP, CRO, AMX
+
+Peripheral (with connection to tier 1)
+Peripheral 1: TOB, AMK
+
+Peripheral (No connection to the central hub)
+Peripheral 2: PEN, VAN, CLI, OXA, ERY
+Peripheral 3: DOX, CMP, AZT
+
+Smaller Peripherals (No connection to the central hub)
+Peripheral 4: ROX, AZM
+
+
+
+Community/Outpatient
+-----------------------------------
+Central hub
+MER, AMP, CIP, MCL, NFT, CEP, CXM, SXT, CFA, CPO, ERT, PIP, PIT, TRP, CTX, CAZ, AMC
+
+Tier connected to central
+TGC, GEN, IMP, LEV, CRO, AMX, AMS
+
+Peripheral (No connection to the central hub)
+Peripheral 1: PEN, VAN, CLI, OXA, ERY
+Peripheral 2: FLU, ROX, AZM
+Peripheral 2: AZT, AMK, COL, TOB, TET, CMP
+
+Smaller Peripherals (No connection to the central hub)
+Peripheral 3: LIZ, TPL
+
+
+
+
+
+Ecoli urine In-patient(ICU ward/General ward)
+
+ICU ward
+--------------------------------
+Central hub
+MER, AMP, CIP, TRP, CFA, NFT, CXM, CEP, ERT, MCL, SXT, CPO, AMC, PIT, CTX
+
+Tier connected to central
+Tier 1: IMP, GEN, PIP, TGC, MOX, CFI, CAZ, LEV, CRO, AMX, AMS
+
+Peripheral (with connection to tier 1)
+Peripheral 1: TOB, AMK
+
+Peripheral (No connection to the central hub)
+Peripheral 2: PEN, CLI, TPL, OXA, ERY
+Peripheral 3: TET, CMP, COL, CZA, AZT, DOX
+
+Smaller Peripherals (No connection to the central hub)
+Peripheral 4: FUS, DPT
+
+
+General ward
+-----------------------------------
+Central hub
+AMP, CIP, MER, MCL, CXM, CFA, NFT, ERT, TRP, PIT, LEV, CPO, AMC, CAZ, CTX, SXT, CEP
+
+Tier connected to central
+Tier 1: PIP, CFI, GEN, MOX, TGC, AMS, IMP, AMX, CRO
+
+
+Peripheral (with connection to tier 1)
+Peripheral 1: TOB, AMK
+
+Peripheral (No connection to the central hub)
+Peripheral 2: PEN, VAN, CLI, OXA, ERY
+Peripheral 3: AZT, CMP, DOX
+
+Smaller Peripherals (No connection to the central hub)
+Peripheral 4: ROX, AZM
