@@ -199,3 +199,6 @@ full_paper
 WHO_Aware_data_*
 datasets/WHO_Aware_data.tar.xz
 outputs.tar.xz
+PreprocessingWorkflow.pdf
+rough.txt
+test*.py
