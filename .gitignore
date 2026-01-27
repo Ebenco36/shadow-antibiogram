@@ -202,3 +202,9 @@ outputs.tar.xz
 PreprocessingWorkflow.pdf
 rough.txt
 test*.py
+perc_conti.py
+dataset_publication.py
+result.txt
+running.ipynb
+sequenceDiagram.md
+PreprocessingWorkflow.pdf
