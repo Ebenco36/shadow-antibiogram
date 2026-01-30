@@ -137,11 +137,11 @@ def main():
     
     logger.info("++++++++++++++++++++++++ RUNNING USE CASES ++++++++++++++++++++++++++")
     new_df = runner.data_loader.get_combined()
-    run_two_key_use_cases(new_df, Path("results_use_cases"))
+    run_two_key_use_cases(new_df, Path("./outputs/use_cases"))
     logger.info("++++++++++++++++++++++++ DONE RUNNING USE CASES +++++++++++++++++++++")
     
     logger.info("++++++++++++++++++++++++ RUNNING TEMPORAL  ++++++++++++++++++++++++++")
-    run_main_temporal(df=new_df)
+    run_main_temporal(df=new_df, base_dir = "./outputs/temporal_analysis")
     logger.info("+++++++++++++++++++++ DONE RUNNING TEMPORAL  ++++++++++++++++++++++++")
 
     ##########################################################################
@@ -169,8 +169,8 @@ def main():
         continuous_participation_percentage = len(df_cont)/len(df) * 100
         print(f"Percentage of isolates retained after accounting for continuous participation: {continuous_participation_percentage:.2f}%")
 
-        run_two_key_use_cases(df_cont, Path("results_use_cases_continuous"))
-        run_main_temporal(df=df_cont, base_dir="./publication_outputs/manuscript/continuous_temporal")
+        run_two_key_use_cases(df_cont, Path("./outputs/use_cases_continuous"))
+        run_main_temporal(df=df_cont, base_dir="./outputs/temporal_analysis_for_continuous")
 
 if __name__ == "__main__":
     main()

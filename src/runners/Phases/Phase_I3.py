@@ -226,7 +226,7 @@ def run_storyline_with_ops(
 # Storyline definition (ops applied to ALL blocks)
 # ==============================================================
 
-OUTPUT_ROOT   = Path("./datasets/output/Phase_I/panel_breadth_analysis")
+OUTPUT_ROOT   = Path("./outputs/panel_breadth_analysis")
 TEST_SUFFIX   = "_Tested"
 SAVE_PDF      = True
 

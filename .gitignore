@@ -209,3 +209,5 @@ running.ipynb
 sequenceDiagram.md
 PreprocessingWorkflow.pdf
 requirements.in
+monthly_aggregate.csv
+test_data.csv

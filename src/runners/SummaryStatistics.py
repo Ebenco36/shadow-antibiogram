@@ -4,7 +4,7 @@ from src.controllers.AMRTestingBasicStatistics import AMRTestingPatternAnalysis
 
 def run_visualizations(main_df:pd.DataFrame):
     analyzer = AMRTestingPatternAnalysis(
-        output_path="./datasets/output",
+        output_path="./outputs",
         dataframe=main_df,
     )
 

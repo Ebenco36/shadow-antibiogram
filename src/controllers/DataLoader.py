@@ -222,7 +222,7 @@ class DataLoader:
         abx_selected = access + watch + reserve
         if use_not_set:
             abx_selected += self.get_abx_by_category(["Not Set"], return_which=return_which, use_not_set=True)
-        print("Does LoadClasses know SXT base?", "SXT - Co-Trimoxazol" in abx_selected)
-        print(self.get_abx_by_category(["Access", "Watch", "Reserve"]))
+        # print("Does LoadClasses know SXT base?", "SXT - Co-Trimoxazol" in abx_selected)
+        # print(self.get_abx_by_category(["Access", "Watch", "Reserve"]))
 
         return self.df[self._present(self.meta_cols + abx_selected)]

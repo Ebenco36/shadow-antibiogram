@@ -65,8 +65,8 @@ from src.utils.helpers import filter_antibiotic_group_items
 # Global configuration
 # ------------------------------------------------------------------------------
 DATA_FILE_PATH = "./datasets/output/tables/saved_with_test_indicators_tab.csv"
-OUTPUT_ROOT = Path("./datasets/output/Phase_I/Temporal_Analysis")
-OUTPUT_ROOT_TEST = Path("./datasets/output/Phase_I/")
+OUTPUT_ROOT = Path("./outputs/Temporal_Analysis")
+OUTPUT_ROOT_TEST = Path("./outputs/")
 ANTIBIOTIC_SUFFIX = "_Tested"
 DISPARITY_MODELS = ("logit", "log", "rd")  # risk-diff for interpretability
 FDR_ALPHA = 0.05

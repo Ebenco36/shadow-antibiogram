@@ -239,8 +239,8 @@ class TemporalAntibioticLineChartPlotly:
 from src.controllers.DataLoader import DataLoader
 
 def run_temp_basic(data_loader: DataLoader, df: pd.DataFrame):
-    OUTPUT_DIR_WHO = "./datasets/output/Phase_I/basic_trend_analysis_for_group_antibiotics/AWaRe_classes/"
-    OUTPUT_DIR_CLASSIFICATION = "./datasets/output/Phase_I/basic_trend_analysis_for_group_antibiotics/Antibiotics_classifications/"
+    OUTPUT_DIR_WHO = "./outputs/trend_analysis_for_antibiotic_group/AWaRe_classes/"
+    OUTPUT_DIR_CLASSIFICATION = "./outputs/trend_analysis_for_antibiotic_group/Antibiotics_classifications/"
     os.makedirs(OUTPUT_DIR_WHO, exist_ok=True)
     os.makedirs(OUTPUT_DIR_CLASSIFICATION, exist_ok=True)
 

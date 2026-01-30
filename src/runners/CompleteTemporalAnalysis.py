@@ -5,7 +5,7 @@ from src.runners.Phases.Phase_I2 import run_phase_I2
 from src.controllers.DataLoader import DataLoader
 from src.runners.Phases.Phase_I1 import run_phase_I1
 
-def ensure_output_dirs(base_dir="datasets/output", verbose=True):
+def ensure_output_dirs(base_dir="./outputs", verbose=True):
     base = Path(base_dir)
     visuals = base / "descriptive_visuals"
 

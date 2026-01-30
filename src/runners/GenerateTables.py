@@ -27,7 +27,7 @@ from src.controllers.DataLoader import DataLoader, read_any
 # Defaults / Constants
 # -------------------------
 DEFAULT_INPUT = "datasets/output/tables/saved_with_test_indicators_tab.csv"
-DEFAULT_OUT_DIR = "datasets/output/tables/publication_tables"
+DEFAULT_OUT_DIR = "./outputs/publication_tables"
 
 AGE_BUCKETS = ['<15', '15–29', '30–44', '45–59', '60–74', '75–89', '90+']
 WARD_CANDIDATES = ['ARS_WardType', 'WardType', 'Ward', 'ARS_Wardtype']
@@ -883,7 +883,7 @@ def build_publication_tables_with_options(opts: Options) -> List[str]:
 if __name__ == "__main__":
     files = build_publication_tables(
         input="./datasets/WHO_Aware_data",
-        out_dir="./datasets/output/publication_tables",
+        out_dir="./outputs/publication_tables",
         formats=["csv", "latex"],
         who_focus=True
     )
@@ -891,9 +891,9 @@ if __name__ == "__main__":
     # Or with Options
     opts = Options(
         input="./datasets/WHO_Aware_data",
-        out_dir="./datasets/output/publication_tables",
+        out_dir="./outputs/publication_tables",
         formats=["csv", "latex"],
-        overleaf_project="./datasets/output/publication_tables/overleaf_project"
+        overleaf_project="./outputs/publication_tables/overleaf_project"
     )
     files = build_publication_tables_with_options(opts)
 

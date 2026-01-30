@@ -141,7 +141,7 @@ class ExperimentConfig:
     evaluation: EvaluationConfig
 
     # Where to write CSVs, plots, networks, etc.
-    output_dir: Path = Path("results")
+    output_dir: Path = Path("./outputs/sensitivity_runs")
 
     # For global reproducibility (Louvain, numpy, etc.)
     random_seed: int = 100
@@ -197,7 +197,7 @@ class ExperimentConfig:
             data=data_cfg,
             parameters=param_cfg,
             evaluation=eval_cfg,
-            output_dir=Path("results"),
+            output_dir=Path("./outputs/sensitivity_runs"),
             random_seed=100,
             visualization=viz_cfg,
         )

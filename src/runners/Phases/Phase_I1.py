@@ -296,7 +296,7 @@ class VisualAnalyticsPipeline:
     def run_per_antibiotic_boxplots(self):
         """CHAPTER 1: Runs the full layered boxplot analysis."""
         print("\n--- Running Chapter 1: Per-Antibiotic Coverage Boxplots ---")
-        chapter_dir = Path(self.config.output_dir) / "1_per_antibiotic_variation"
+        chapter_dir = Path(self.config.output_dir) / "WHO_AWaRe_on_Coverage"
         
         # Phase 1: Baseline Analysis
         print("  Phase 1: Generating baseline variation plots...")
@@ -393,8 +393,8 @@ class VisualAnalyticsPipeline:
     def run_others(self):
         """Runs all chapters of the visual analysis pipeline."""
         self.run_per_antibiotic_boxplots()
-        self.run_group_comparison_barcharts()
-        self.run_clustergrams()
+        # self.run_group_comparison_barcharts()
+        # self.run_clustergrams()
         print("\nVisual analytics pipeline complete!")
 
 # ==============================================================================
@@ -413,14 +413,14 @@ def main(main_df:pd.DataFrame):
     # --- C. Define the Analysis Pipeline ---
     publication_pipeline: List[Dict[str, Any]] = [
         # SECTION 1: THE PRIMARY DIVIDE - INPATIENT VS. OUTPATIENT CARE
+        # {
+        #     "section": "care_setting_comparison",
+        #     "type": "clustergram", "filter_by": "CareType", "categories": ["In-Patient", "Out-Patient"],
+        #     "title_template": "Figure 1. Divergent Antimicrobial Testing Panels in {} Settings",
+        #     "rationale": "To establish the foundational differences in testing formularies between hospital and community care."
+        # },
         {
-            "section": "1_primary_divide",
-            "type": "clustergram", "filter_by": "CareType", "categories": ["In-Patient", "Out-Patient"],
-            "title_template": "Figure 1. Divergent Antimicrobial Testing Panels in {} Settings",
-            "rationale": "To establish the foundational differences in testing formularies between hospital and community care."
-        },
-        {
-            "section": "1_primary_divide",
+            "section": "care_setting_comparison",
             "type": "boxplot", "compare_by": "CareType",
             "filter_on": [{"column": "CareType", "values": ["In-Patient", "Out-Patient"]}],
             "aware_classes": ["Watch", "Reserve"],
@@ -428,14 +428,14 @@ def main(main_df:pd.DataFrame):
             "rationale": "To quantify the difference in testing for high-priority antibiotics, a proxy for perceived infection severity and resistance risk."
         },
         # SECTION 2: STRATIFICATION BY INFECTION PROFILE
+        # {
+        #     "section": "infection_source_stratification",
+        #     "type": "clustergram", "filter_by": "TextMaterialgroupRkiL0", "categories": ["Blood Culture", "Urine"],
+        #     "title_template": "Figure 3. Comparison of Testing Panels by Sample Source - {}",
+        #     "rationale": "To visually compare the entire testing formulary for bloodstream infections versus urinary tract infections."
+        # },
         {
-            "section": "2_infection_profile",
-            "type": "clustergram", "filter_by": "TextMaterialgroupRkiL0", "categories": ["Blood Culture", "Urine"],
-            "title_template": "Figure 3. Comparison of Testing Panels by Sample Source - {}",
-            "rationale": "To visually compare the entire testing formulary for bloodstream infections versus urinary tract infections."
-        },
-        {
-            "section": "2_infection_profile",
+            "section": "infection_source_stratification",
             "type": "boxplot", "compare_by": "TextMaterialgroupRkiL0",
             "filter_on": [
                 {"column": "CareType", "values": ["In-Patient"]},
@@ -446,14 +446,14 @@ def main(main_df:pd.DataFrame):
             "rationale": "To assess how hospitals adapt testing strategies for a systemic bloodstream infection versus a localized UTI."
         },
         # SECTION 3: INFLUENCE OF INSTITUTIONAL AND GEOGRAPHIC FACTORS
+        # {
+        #     "section": "institutional_and_geographic_context",
+        #     "type": "clustergram", "filter_by": "Hospital_Priority", "categories": ["High", "Medium"],
+        #     "title_template": "Figure 5. Comparison of Testing Panels by Hospital Priority - {} Priority",
+        #     "rationale": "To provide a detailed visual overview of how the entire testing formulary differs between high- and medium-priority hospitals."
+        # },
         {
-            "section": "3_institutional_factors",
-            "type": "clustergram", "filter_by": "Hospital_Priority", "categories": ["High", "Medium"],
-            "title_template": "Figure 5. Comparison of Testing Panels by Hospital Priority - {} Priority",
-            "rationale": "To provide a detailed visual overview of how the entire testing formulary differs between high- and medium-priority hospitals."
-        },
-        {
-            "section": "3_institutional_factors",
+            "section": "institutional_and_geographic_context",
             "type": "boxplot", "compare_by": "Facility_Function",
             "filter_on": [
                 {"column": "CareType", "values": ["In-Patient"]},
@@ -463,15 +463,15 @@ def main(main_df:pd.DataFrame):
             "title_template": "Figure 6. 'Reserve' Class Testing by Hospital Type (General vs. Advanced)",
             "rationale": "To investigate institutional practice variation by comparing last-resort testing between standard and high-level hospitals."
         },
-        {
-            "section": "3_institutional_factors",
-            "type": "clustergram", "filter_by": "ARS_Region", "categories": ["West", "North East"],
-            "title_template": "Figure 7. Regional Practice Variation: Comparison of Testing Panels in {} Region",
-            "rationale": "To visually identify geographic heterogeneity in standard testing protocols."
-        },
+        # {
+        #     "section": "institutional_and_geographic_context",
+        #     "type": "clustergram", "filter_by": "ARS_Region", "categories": ["West", "North East"],
+        #     "title_template": "Figure 7. Regional Practice Variation: Comparison of Testing Panels in {} Region",
+        #     "rationale": "To visually identify geographic heterogeneity in standard testing protocols."
+        # },
         # SECTION 4: DEEP DIVE INTO HIGH-CONSEQUENCE CLINICAL SCENARIOS
         {
-            "section": "4_high_consequence",
+            "section": "high_risk_clinical_scenarios",
             "type": "boxplot", "compare_by": "ARS_WardType",
             "filter_on": [
                 {"column": "PathogenGenus", "values": ["Acinetobacter", "Pseudomonas"]},
@@ -486,7 +486,7 @@ def main(main_df:pd.DataFrame):
     
     # --- D. Configure and Run the Pipeline ---
     config = AnalysisConfig(
-        output_dir="./datasets/output/descriptive_visuals",
+        output_dir="./outputs/boxplots",
         analysis_pipeline=publication_pipeline
     )
     pipeline = VisualAnalyticsPipeline(df=main_df, config=config)

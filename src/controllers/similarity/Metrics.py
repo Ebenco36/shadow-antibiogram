@@ -23,9 +23,86 @@ def _row_l2_normalize(X: np.ndarray, eps: float = 1e-12) -> np.ndarray:
     return X / norms
 
 # ----------------------------- utilities -----------------------------
+def _validate_binary_01_sampled(
+    df: pd.DataFrame,
+    cols: List[str],
+    *,
+    sample_n: int = 200_000,
+    random_state: int = 0,
+) -> None:
+    """
+    Validate that selected columns contain only binary values {0,1} (plus NaN / bool).
+    Uses sampling for performance on very large DataFrames.
+
+    Raises
+    ------
+    ValueError if any non-binary values are found.
+    """
+    if not cols:
+        return
+
+    n = len(df)
+    sample = df if n <= sample_n else df.sample(n=sample_n, random_state=random_state)
+
+    allowed = {0, 1, 0.0, 1.0, True, False}
+    bad_cols = []
+
+    for c in cols:
+        if c not in sample.columns:
+            continue
+
+        s = sample[c].dropna()
+
+        # If object-like, attempt numeric coercion (helps with "0"/"1" strings)
+        if s.dtype == "object":
+            s_num = pd.to_numeric(s, errors="coerce")
+            # if coercion succeeds for most values, use numeric
+            if s_num.notna().mean() > 0.9:
+                s = s_num
+
+        vals = pd.unique(s)
+        if len(vals) == 0:
+            continue
+
+        if not set(vals).issubset(allowed):
+            examples = [v for v in vals if v not in allowed][:8]
+            mx = None
+            try:
+                mx = float(pd.to_numeric(pd.Series(vals), errors="coerce").max())
+            except Exception:
+                pass
+            bad_cols.append((c, examples, mx))
+
+    if bad_cols:
+        lines = []
+        for c, ex, mx in bad_cols[:12]:
+            hint = ""
+            if mx is not None and mx > 1:
+                hint = f" (max≈{mx:g} → looks like counts/aggregation)"
+            lines.append(f"- {c}: examples={ex}{hint}")
+
+        raise ValueError(
+            "Non-binary values detected in columns expected to be 0/1.\n"
+            "This similarity engine assumes isolate-level binary indicators per row.\n\n"
+            "Offending columns (sampled):\n"
+            + "\n".join(lines)
+            + "\n\nFix:\n"
+            "  • Ensure you pass isolate-level rows into CoTestAnalyzer/SimilarityEngine (not aggregated counts), OR\n"
+            "  • If you intended month-level networks, compute them from isolate-level subsets by YearMonth (no groupby-sum),\n"
+            "    OR export pairwise co-test counts n_ij as an edge list.\n"
+        )
+
 
 def _to_binary(df: pd.DataFrame, cols: List[str], positive: bool = True) -> np.ndarray:
-    """Convert selected columns to a 0/1 array."""
+    """
+    Convert selected columns to a 0/1 array.
+
+    Dynamic behavior:
+    - Validates input is binary 0/1 first (sampled).
+    - Prevents silently treating aggregated counts (e.g., 160) as 1.
+    """
+    _validate_binary_01_sampled(df, cols)
+
     arr = df[cols].to_numpy()
     if positive:
         arr = (arr > 0).astype(int)
