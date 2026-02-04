@@ -55,8 +55,7 @@ GROUP_VARS = [
     "CareType",
     "AgeGroup",
     "AgeRange",
-    "GramType",
-    # "Sex"
+    "GramType"
 ]
 MIN_ROWS = 5
 NETWORK_THRESHOLD_SWEEP = 0.2

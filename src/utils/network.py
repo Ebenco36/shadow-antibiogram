@@ -1026,7 +1026,7 @@ def visualize_antibiotic_graph_from_partition(
 
     # ----------------- sanity checks -----------------
     if G.number_of_nodes() == 0:
-        print("[viz_from_partition] WARNING: graph has 0 nodes.")
+        # print("[viz_from_partition] WARNING: graph has 0 nodes.")
         return {
             "paths": {"html": None, "png": None, "gexf": None},
             "graph": {"nodes": 0, "edges": 0},
@@ -1037,7 +1037,7 @@ def visualize_antibiotic_graph_from_partition(
     partition = {n: int(g) for n, g in partition.items() if n in G}
 
     if not partition:
-        print("[viz_from_partition] WARNING: partition is empty or mismatched with graph.")
+        # print("[viz_from_partition] WARNING: partition is empty or mismatched with graph.")
         return {
             "paths": {"html": None, "png": None, "gexf": None},
             "graph": {"nodes": G.number_of_nodes(), "edges": G.number_of_edges()},
@@ -1210,10 +1210,10 @@ def visualize_antibiotic_graph_from_partition(
         .sort_index()
         .to_dict()
     )
-    print(
-        f"[viz_from_partition] communities: {len(community_sizes)} {community_sizes}, "
-        f"nodes={G.number_of_nodes()}, edges={G.number_of_edges()}"
-    )
+    # print(
+    #     f"[viz_from_partition] communities: {len(community_sizes)} {community_sizes}, "
+    #     f"nodes={G.number_of_nodes()}, edges={G.number_of_edges()}"
+    # )
 
     return {
         "paths": {"html": html_path, "png": image_path, "gexf": gexf_out},

@@ -26,10 +26,10 @@ from src.utils.network import (
     visualize_antibiotic_graph_from_partition,
     visualize_antibiotic_network,
 )
-from src.controllers.AMR.embedding.embedding_projector import (
-    EmbeddingProjector,
-    EmbeddingProjectorConfig,
-)
+# from src.controllers.AMR.embedding.embedding_projector import (
+#     EmbeddingProjector,
+#     EmbeddingProjectorConfig,
+# )
 from src.utils.helpers import get_label
 from src.controllers.AMR.statistics.edge_significance import EdgeSignificancePruner
 
@@ -81,19 +81,21 @@ class VisualizationManager:
         self.use_fdr_edge_pruning: bool = bool(
             getattr(viz_cfg, "use_fdr_edge_pruning", False)
         )
-        
+
         self.fdr_alpha: float = float(getattr(viz_cfg, "fdr_alpha", 0.05))
         self.fdr_min_total: int = int(getattr(viz_cfg, "fdr_min_total", 20))
-        self.fdr_min_positive: int = int(getattr(viz_cfg, "fdr_min_positive", 3))
-        self.fdr_alternative: str = str(getattr(viz_cfg, "fdr_alternative", "two-sided"))
+        self.fdr_min_positive: int = int(
+            getattr(viz_cfg, "fdr_min_positive", 3))
+        self.fdr_alternative: str = str(
+            getattr(viz_cfg, "fdr_alternative", "two-sided"))
 
-        self.embedding_projector = EmbeddingProjector(
-            EmbeddingProjectorConfig(
-                n_components=2,
-                random_state=self.config.random_seed,
-                output_dir=self.config.output_dir / "embeddings",
-            )
-        )
+        # self.embedding_projector = EmbeddingProjector(
+        #     EmbeddingProjectorConfig(
+        #         n_components=2,
+        #         random_state=self.config.random_seed,
+        #         output_dir=self.config.output_dir / "embeddings",
+        #     )
+        # )
     # ------------------------------------------------------------------ #
     # Style
     # ------------------------------------------------------------------ #
@@ -133,7 +135,8 @@ class VisualizationManager:
 
             # Prefer the config path if provided
             if getattr(self.config, "evaluation", None) is not None:
-                gt_paths = getattr(self.config.evaluation, "ground_truth_paths", None)
+                gt_paths = getattr(self.config.evaluation,
+                                   "ground_truth_paths", None)
                 if isinstance(gt_paths, dict):
                     fine_path = gt_paths.get("fine", None)
 
@@ -151,7 +154,8 @@ class VisualizationManager:
                     "Network labels will use raw antibiotic names."
                 )
         except Exception as e:
-            print(f"[VisualizationManager] Could not load antibiotic_class_map: {e}")
+            print(
+                f"[VisualizationManager] Could not load antibiotic_class_map: {e}")
             self.abx_class_map = None
 
     # ------------------------------------------------------------------ #
@@ -229,7 +233,8 @@ class VisualizationManager:
 
         # Plotly scalar visualizations
         # self.plot_parameter_heatmaps_per_dataset(output_dir / "heatmaps")
-        self.plot_metric_comparison_overall(output_dir / "metric_comparison_overall")
+        self.plot_metric_comparison_overall(
+            output_dir / "metric_comparison_overall")
         self.plot_stability_analysis(output_dir / "stability_analysis")
         self.plot_optimal_parameter_tradeoffs(output_dir / "tradeoff_analysis")
         self.plot_ics_and_stability_vs_tau_plotly(
@@ -243,17 +248,16 @@ class VisualizationManager:
         self.plot_best_networks(output_dir / "networks")
         self.plot_best_networks_original(output_dir / "networks_original")
 
-        
         # NEW: UMAP + t-SNE embeddings for the same best configs
-        self.plot_umap_tsne_for_best_configs(output_dir / "embeddings")
-        
+        # self.plot_umap_tsne_for_best_configs(output_dir / "embeddings")
+
         # AFTER FDR: only similarity-based networks (no re-run of original)
         if self.use_fdr_edge_pruning:
             self.plot_best_networks_fdr(output_dir / "networks_fdr")
             self.export_fdr_edge_statistics(
                 output_dir / "fdr_edge_statistics_best_configs.csv"
             )
-            
+
             # --- NEW: retention computation + plot ---
             # --- NEW: retention computation across ALL metrics ---
             retention_dir = output_dir / "retention"
@@ -306,8 +310,10 @@ class VisualizationManager:
             return
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
-        flat_df = flat_df.reset_index()  # genus, material, metric, tau, gamma, ...
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
+        # genus, material, metric, tau, gamma, ...
+        flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
         if score_col is None:
@@ -319,7 +325,8 @@ class VisualizationManager:
             .first()
         )
 
-        best_per_dataset.to_csv(output_dir / "best_configs_per_dataset.csv", index=False)
+        best_per_dataset.to_csv(
+            output_dir / "best_configs_per_dataset.csv", index=False)
 
     # ------------------------------------------------------------------ #
     # 1) τ–γ Heatmaps per (genus, material) – Plotly
@@ -400,7 +407,8 @@ class VisualizationManager:
                     if df_plot.empty:
                         continue
 
-                    pivot = df_plot.pivot(index="gamma", columns="tau", values="value")
+                    pivot = df_plot.pivot(
+                        index="gamma", columns="tau", values="value")
 
                     # Track unique tau/gamma for consistent ticks
                     all_tau_vals.update(pivot.columns.tolist())
@@ -421,7 +429,8 @@ class VisualizationManager:
 
             # Sort τ/γ so ticks are ordered nicely
             tau_vals = sorted(all_tau_vals)
-            gamma_vals = sorted(all_gamma_vals, reverse=True)  # so 1.0 appears at top
+            # so 1.0 appears at top
+            gamma_vals = sorted(all_gamma_vals, reverse=True)
 
             # Axis formatting:
             for i in range(1, n_rows + 1):
@@ -462,7 +471,7 @@ class VisualizationManager:
                 title=f"{genus} – {material} : τ–γ heatmaps",
                 template="plotly_white",
                 title_x=0.5,
-                width=1600, 
+                width=1600,
                 font=dict(size=14),
                 margin=dict(l=90, r=130, t=90, b=70),
                 # one shared colorbar on the right
@@ -477,8 +486,10 @@ class VisualizationManager:
             )
 
             # Save HTML
-            out_html = output_dir / f"parameter_heatmaps_{safe_genus}_{safe_mat}.html"
-            pio.write_html(fig, file=str(out_html), include_plotlyjs="cdn", full_html=True)
+            out_html = output_dir / \
+                f"parameter_heatmaps_{safe_genus}_{safe_mat}.html"
+            pio.write_html(fig, file=str(out_html),
+                           include_plotlyjs="cdn", full_html=True)
 
             # Save PNG (high resolution)
             out_png = out_html.with_suffix(".png")
@@ -487,8 +498,6 @@ class VisualizationManager:
             # Save PDF (vector)
             out_pdf = out_html.with_suffix(".pdf")
             fig.write_image(str(out_pdf), format="pdf")
-
-
 
     # ------------------------------------------------------------------ #
     # 2) Overall metric comparison & global best params – Plotly
@@ -504,8 +513,10 @@ class VisualizationManager:
             return
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
-        flat_df = flat_df.reset_index()  # genus, material, metric, tau, gamma, ...
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
+        # genus, material, metric, tau, gamma, ...
+        flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
         if score_col is None:
@@ -540,7 +551,7 @@ class VisualizationManager:
                 f"genus={global_best['genus']}, material={global_best['material']})"
             ),
             title_x=0.5,
-            width=1600, 
+            width=1600,
             template="plotly_white",
             font=dict(size=16),
             xaxis=dict(
@@ -558,7 +569,8 @@ class VisualizationManager:
         )
 
         out_html = output_path.with_suffix(".html")
-        pio.write_html(fig, file=str(out_html), include_plotlyjs="cdn", full_html=True)
+        pio.write_html(fig, file=str(out_html),
+                       include_plotlyjs="cdn", full_html=True)
 
         out_png = output_path.with_suffix(".png")
         fig.write_image(str(out_png), format="png", scale=4)
@@ -580,7 +592,8 @@ class VisualizationManager:
             return
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         if "stability_mean" not in flat_df.columns:
@@ -619,7 +632,7 @@ class VisualizationManager:
         fig.update_layout(
             title="Stability vs label agreement (best per dataset & metric)",
             title_x=0.5,
-            width=1600, 
+            width=1600,
             template="plotly_white",
             font=dict(size=16),
             xaxis=dict(
@@ -644,7 +657,8 @@ class VisualizationManager:
         )
 
         out_html = output_path.with_suffix(".html")
-        pio.write_html(fig, file=str(out_html), include_plotlyjs="cdn", full_html=True)
+        pio.write_html(fig, file=str(out_html),
+                       include_plotlyjs="cdn", full_html=True)
 
         out_png = output_path.with_suffix(".png")
         fig.write_image(str(out_png), format="png", scale=4)
@@ -670,7 +684,8 @@ class VisualizationManager:
             return
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
@@ -723,7 +738,7 @@ class VisualizationManager:
         fig.update_layout(
             title=f"Trade-offs among top {top_k} configurations (all datasets)",
             title_x=0.5,
-            width=1600, 
+            width=1600,
             template="plotly_white",
             font=dict(size=16),
             xaxis=dict(
@@ -748,7 +763,8 @@ class VisualizationManager:
         )
 
         out_html = output_path.with_suffix(".html")
-        pio.write_html(fig, file=str(out_html), include_plotlyjs="cdn", full_html=True)
+        pio.write_html(fig, file=str(out_html),
+                       include_plotlyjs="cdn", full_html=True)
 
         out_png = output_path.with_suffix(".png")
         fig.write_image(str(out_png), format="png", scale=4)
@@ -781,7 +797,8 @@ class VisualizationManager:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         if "ics_score_mean" not in flat_df.columns or "stability_mean" not in flat_df.columns:
@@ -842,7 +859,7 @@ class VisualizationManager:
             fig.update_layout(
                 title=f"ICS & Stability vs τ – {genus} / {material}",
                 title_x=0.5,
-                width=1600, 
+                width=1600,
                 height=900,
                 template="plotly_white",
                 font=dict(size=16),
@@ -877,8 +894,10 @@ class VisualizationManager:
                 tickfont=dict(size=14),
             )
 
-            out_html = output_dir / f"ics_stability_{safe_genus}_{safe_mat}.html"
-            pio.write_html(fig, file=str(out_html), include_plotlyjs="cdn", full_html=True)
+            out_html = output_dir / \
+                f"ics_stability_{safe_genus}_{safe_mat}.html"
+            pio.write_html(fig, file=str(out_html),
+                           include_plotlyjs="cdn", full_html=True)
 
             out_png = output_dir / f"ics_stability_{safe_genus}_{safe_mat}.png"
             fig.write_image(str(out_png), format="png", scale=4)
@@ -911,7 +930,8 @@ class VisualizationManager:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         score_cols = [
@@ -988,7 +1008,7 @@ class VisualizationManager:
                 title=f"External & Hierarchical Scores vs τ – {genus} / {material}",
                 template="plotly_white",
                 title_x=0.5,
-                width=1600,  
+                width=1600,
                 height=350 * n_rows,
                 font=dict(size=16),
                 legend=dict(
@@ -1002,13 +1022,17 @@ class VisualizationManager:
                 margin=dict(l=70, r=40, t=90, b=80),
             )
 
-            out_html = output_dir / f"external_scores_{safe_genus}_{safe_mat}.html"
-            pio.write_html(fig, file=str(out_html), include_plotlyjs="cdn", full_html=True)
+            out_html = output_dir / \
+                f"external_scores_{safe_genus}_{safe_mat}.html"
+            pio.write_html(fig, file=str(out_html),
+                           include_plotlyjs="cdn", full_html=True)
 
-            out_png = output_dir / f"external_scores_{safe_genus}_{safe_mat}.png"
+            out_png = output_dir / \
+                f"external_scores_{safe_genus}_{safe_mat}.png"
             fig.write_image(str(out_png), format="png", scale=4)
 
-            out_pdf = output_dir / f"external_scores_{safe_genus}_{safe_mat}.pdf"
+            out_pdf = output_dir / \
+                f"external_scores_{safe_genus}_{safe_mat}.pdf"
             fig.write_image(str(out_pdf), format="pdf")
 
     # ------------------------------------------------------------------ #
@@ -1031,8 +1055,10 @@ class VisualizationManager:
             return
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
-        flat_df = flat_df.reset_index()  # genus, material, metric, tau, gamma, ...
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
+        # genus, material, metric, tau, gamma, ...
+        flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
         if score_col is None:
@@ -1185,7 +1211,8 @@ class VisualizationManager:
         networks_dir.mkdir(parents=True, exist_ok=True)
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
@@ -1252,7 +1279,8 @@ class VisualizationManager:
             pdf_name = f"{base_name}.pdf"
             gexf_name = f"{base_name}.gexf"
 
-            title = "" # f"{genus} – {material} – {metric} (tau={tau:.2f}, gamma={gamma:.2f})"
+            # f"{genus} – {material} – {metric} (tau={tau:.2f}, gamma={gamma:.2f})"
+            title = ""
 
             visualize_antibiotic_network(
                 data_input=sim_for_viz,
@@ -1290,7 +1318,8 @@ class VisualizationManager:
         networks_dir.mkdir(parents=True, exist_ok=True)
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
@@ -1364,7 +1393,7 @@ class VisualizationManager:
             pdf_name = f"{base_name}_original.pdf"
             gexf_name = f"{base_name}_original.gexf"
 
-            title = "" # (
+            title = ""  # (
             #    f"{genus} – {material} – {metric} "
             #    f"(tau={tau:.2f}, gamma={gamma:.2f}, seed={self.config.random_seed})"
             # )
@@ -1402,7 +1431,8 @@ class VisualizationManager:
         networks_dir.mkdir(parents=True, exist_ok=True)
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
@@ -1445,11 +1475,11 @@ class VisualizationManager:
                 )
                 .fit()
             )
-            
+
             safe_genus = (genus or "ALL").replace(" ", "_")
             safe_mat = (material or "ALL").replace(" ", "_")
             safe_metric = metric.replace(" ", "_")
-    
+
             stats_path = (
                 networks_dir
                 / f"edge_stats_{safe_genus}_{safe_mat}_{safe_metric}.csv"
@@ -1469,7 +1499,7 @@ class VisualizationManager:
                     "alternative": self.fdr_alternative,
                 },
             )
-    
+
             allowed_pairs = pruner.get_significant_pairs()  # Set[(u, v)]
 
             # --- Similarity matrix ---
@@ -1507,7 +1537,8 @@ class VisualizationManager:
                         enrich=True,
                         include_class=False,
                     )
-                    sim_for_viz = sim_fdr.rename(index=label_map, columns=label_map)
+                    sim_for_viz = sim_fdr.rename(
+                        index=label_map, columns=label_map)
                 except Exception:
                     sim_for_viz = sim_fdr
             else:
@@ -1518,7 +1549,7 @@ class VisualizationManager:
             pdf_name = f"net_{base}.pdf"
             gexf_name = f"net_{base}.gexf"
 
-            title = "" # (
+            title = ""  # (
             #     f"{genus} – {material} – {metric} "
             #     f"(tau={tau:.2f}, gamma={gamma:.2f}) – [FDR-pruned = {self.fdr_alpha}]"
             # )
@@ -1541,8 +1572,8 @@ class VisualizationManager:
 
             # Use different filenames so you don't overwrite the first set
             html_name_def = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.html"
-            png_name_def  = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.png"
-            pdf_name_def  = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.pdf"
+            png_name_def = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.png"
+            pdf_name_def = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.pdf"
             gexf_name_def = f"net_{safe_genus}_{safe_mat}_{safe_metric}_FDR_DEFAULT.gexf"
 
             visualize_antibiotic_network(
@@ -1556,8 +1587,8 @@ class VisualizationManager:
                 gexf_path=gexf_name_def,
                 title=title,
                 remove_isolated=False,
-)
-            
+            )
+
     def export_fdr_edge_statistics(self, output_path: Path):
         """
         Export a CSV with FDR statistics for each BEST (genus, material, metric):
@@ -1578,7 +1609,8 @@ class VisualizationManager:
             return
 
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
         flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
@@ -1668,10 +1700,10 @@ class VisualizationManager:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             out_df.to_csv(output_path, index=False)
 
-        
     # ------------------------------------------------------------------ #
     # 12) Compute edge-retention summary (per genus × material)
     # ------------------------------------------------------------------ #
+
     def compute_retention_summary(
         self,
         output_csv: Path,
@@ -1703,8 +1735,10 @@ class VisualizationManager:
 
         # Flatten aggregated results
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
-        flat_df = flat_df.reset_index()  # genus, material, metric, tau, gamma, ...
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
+        # genus, material, metric, tau, gamma, ...
+        flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
         if score_col is None:
@@ -1773,7 +1807,8 @@ class VisualizationManager:
                 alternative=self.fdr_alternative,
             ).fit()
 
-            qvals = pruner.qval_df.reindex(index=sim.index, columns=sim.columns)
+            qvals = pruner.qval_df.reindex(
+                index=sim.index, columns=sim.columns)
             qvals_np = qvals.to_numpy()
 
             # --- Define mask: edges with sim >= tau (undirected, off-diagonal only) ---
@@ -1835,7 +1870,6 @@ class VisualizationManager:
 
         return df_ret
 
-
     # ------------------------------------------------------------------ #
     # 13) Plot retention by metric (per genus × material) – Plotly
     # ------------------------------------------------------------------ #
@@ -1847,7 +1881,6 @@ class VisualizationManager:
         genera: Optional[List[str]] = None,
         materials: Optional[List[str]] = None,
     ) -> None:
-
         """
         Publication-ready: FDR retention (%) by metric × genus × specimen.
         """
@@ -1876,8 +1909,10 @@ class VisualizationManager:
             print("[Retention] No rows after filtering.")
             return
 
-        df["genus"] = pd.Categorical(df["genus"], categories=genera, ordered=True)
-        df["material"] = pd.Categorical(df["material"], categories=materials, ordered=True)
+        df["genus"] = pd.Categorical(
+            df["genus"], categories=genera, ordered=True)
+        df["material"] = pd.Categorical(
+            df["material"], categories=materials, ordered=True)
         df = df.sort_values(["material", "genus", "metric"])
 
         metrics = sorted(df["metric"].unique())
@@ -1966,17 +2001,17 @@ class VisualizationManager:
         out_pdf = output_path.with_suffix(".pdf")
         out_html.parent.mkdir(parents=True, exist_ok=True)
 
-        pio.write_html(fig, file=str(out_html), include_plotlyjs="cdn", full_html=True)
+        pio.write_html(fig, file=str(out_html),
+                       include_plotlyjs="cdn", full_html=True)
         fig.write_image(str(out_png), format="png", scale=4)
         fig.write_image(str(out_pdf), format="pdf")
 
         print(f"[Retention] Saved improved retention figure → {out_png}")
 
-
-
     # ------------------------------------------------------------------ #
     # 11) UMAP & t-SNE embeddings for best configs (per community)
     # ------------------------------------------------------------------ #
+
     def plot_umap_tsne_for_best_configs(self, output_dir: Path):
         """
         For each BEST (genus, material, metric) configuration:
@@ -2008,8 +2043,10 @@ class VisualizationManager:
 
         # Flatten aggregated_results: MultiIndex columns -> flat names
         flat_df = agg_df.copy()
-        flat_df.columns = ["_".join(c).rstrip("_") for c in flat_df.columns.to_list()]
-        flat_df = flat_df.reset_index()  # genus, material, metric, tau, gamma, ...
+        flat_df.columns = ["_".join(c).rstrip("_")
+                           for c in flat_df.columns.to_list()]
+        # genus, material, metric, tau, gamma, ...
+        flat_df = flat_df.reset_index()
 
         score_col = self._choose_main_score_col(flat_df)
         if score_col is None:
@@ -2156,22 +2193,6 @@ class VisualizationManager:
                     save_pdf=True,
                 )
 
-                # Colour by FINE classification
-                # fig_tsne_fine = self.embedding_projector.plot_embedding(
-                #     coords_tsne,
-                #     labels=fine_labels,
-                #     label_name="Fine class",
-                #     method="TSNE",
-                #     title=f"t-SNE – {genus} / {material} / {metric} (Fine class)",
-                #     hover_data=hover_df,
-                # )
-                # self.embedding_projector.save_figure(
-                #     fig_tsne_fine,
-                #     output_dir / f"tsne_{base}_fine",
-                #     save_png=True,
-                #     save_pdf=True,
-                # )
-
                 # Colour by WHO group
                 fig_tsne_who = self.embedding_projector.plot_embedding(
                     coords_tsne,
@@ -2205,22 +2226,6 @@ class VisualizationManager:
                     save_png=True,
                     save_pdf=True,
                 )
-
-                # Colour by FINE classification
-                # fig_umap_fine = self.embedding_projector.plot_embedding(
-                #     coords_umap,
-                #     labels=fine_labels,
-                #     label_name="Fine class",
-                #     method="UMAP",
-                #     title=f"UMAP – {genus} / {material} / {metric} (Fine class)",
-                #     hover_data=hover_df,
-                # )
-                # self.embedding_projector.save_figure(
-                #     fig_umap_fine,
-                #     output_dir / f"umap_{base}_fine",
-                #     save_png=True,
-                #     save_pdf=True,
-                # )
 
                 # Colour by WHO group
                 fig_umap_who = self.embedding_projector.plot_embedding(

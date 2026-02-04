@@ -600,9 +600,6 @@ def run_scenario_bsi_vs_uti_tiered(main_df: pd.DataFrame, class_map: dict, outpu
     ].copy()
 
     analysis_targets = {
-        "group_Enterobacterales": ("PathogengroupL1", "Gram-negative: Enterobacterales"),
-        "group_Non_fermenters": ("PathogengroupL1", "Gram-negative: Non-fermenters"),
-        "group_Staphylococci": ("PathogengroupL1", "Gram-positive: Staphylococci"),
         "pathogen_Escherichia_coli": ("Pathogen", "Escherichia coli"),
         "pathogen_Staphylococcus_aureus": ("Pathogen", "Staphylococcus aureus"),
         "pathogen_Pseudomonas_aeruginosa": ("Pathogen", "Pseudomonas aeruginosa"),

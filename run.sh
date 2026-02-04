@@ -185,8 +185,8 @@ MODULES=(
   # "src.runners.DataProcessing" # optional full data processing. Not needed since we already have preprocessed data.
   # "src.runners.GenerateTables"
   "src.controllers.AMR.scripts.run_comprehensive_analysis"
-  "src.runners.CompleteTemporalAnalysis"
-  "src.runners.SummaryStatistics"
+  # "src.runners.CompleteTemporalAnalysis"
+  # "src.runners.SummaryStatistics"
 )
 
 for m in "${MODULES[@]}"; do

@@ -266,16 +266,6 @@ STORYLINE = [
 
     # --- CHAPTER 3: MICROBIOLOGY PERSPECTIVE ---
     {
-        "name": "3.1_Pathogen_Group_Logic",
-        "chapter": "3_Microbiology_Perspective",
-        "group_col": "PathogengroupL1",
-        "why_important": "Does breadth align with pathogen groups?",
-        "filter_dict": {"PathogengroupL1": [
-            "Gram-negative: Enterobacterales", "Gram-negative: Non-fermenters",
-            "Gram-positive: Staphylococci", "Gram-positive: Enterococci"
-        ]},
-    },
-    {
         "name": "3.1_Pathogen_GramType_Logic",
         "chapter": "3_Microbiology_Perspective",
         "group_col": "GramType",

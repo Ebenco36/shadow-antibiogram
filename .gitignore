@@ -211,3 +211,6 @@ PreprocessingWorkflow.pdf
 requirements.in
 monthly_aggregate.csv
 test_data.csv
+
+curation_outputs/
+reproducible/

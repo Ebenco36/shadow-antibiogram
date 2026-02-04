@@ -41,7 +41,6 @@ class AggregationSchema:
     """
     group_keys: Tuple[str, ...] = (
         "Pathogen",
-        "PathogengroupL1",
         "GramType",
         "Sex",
         "PathogenGenus",
