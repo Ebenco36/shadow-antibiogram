@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Shadow Antibiogram — Results</title>
+
+  <style>
+    :root{
+      --bg: #f6f8ff;
+      --surface: #ffffff;
+      --card: rgba(2,6,23,0.04);
+      --cardHover: rgba(2,6,23,0.06);
+      --text: #0f172a;
+      --muted: rgba(15,23,42,0.65);
+      --accent: #2563eb;
+      --accent2: #10b981;
+      --border: rgba(15,23,42,0.14);
+      --shadow: 0 12px 28px rgba(2,6,23,0.10);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue";
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 10% 10%, rgba(37,99,235,0.10), transparent 60%),
+        radial-gradient(900px 500px at 80% 20%, rgba(16,185,129,0.08), transparent 60%),
+        radial-gradient(700px 400px at 40% 90%, rgba(245,158,11,0.08), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+
+    .container{
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 64px;
+    }
+
+    header{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-end;
+      margin-bottom:18px;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width: 280px;
+    }
+
+    h1{
+      margin:0;
+      font-size:1.7rem;
+      letter-spacing:0.2px;
+    }
+
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      font-size:0.98rem;
+      line-height: 1.45;
+      max-width: 70ch;
+    }
+
+    .topbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+
+    .search{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.75);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      min-width: 340px;
+      backdrop-filter: blur(8px);
+    }
+    .search input{
+      border:none;
+      outline:none;
+      background:transparent;
+      width:100%;
+      font-size:0.95rem;
+      color: var(--text);
+    }
+
+    .chipbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .chip{
+      cursor:pointer;
+      user-select:none;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.70);
+      padding:9px 12px;
+      border-radius:999px;
+      color: var(--muted);
+      font-size:0.88rem;
+      transition: 0.18s;
+      box-shadow: 0 6px 16px rgba(2,6,23,0.05);
+    }
+    .chip:hover{ transform: translateY(-1px); color: var(--text); }
+    .chip.active{
+      background: rgba(37,99,235,0.12);
+      border-color: rgba(37,99,235,0.35);
+      color: var(--text);
+    }
+
+    .hint{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    code.kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.86em;
+      padding: 0.15em 0.45em;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(2,6,23,0.04);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin: 14px 0 4px;
+    }
+    .stat{
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 18px rgba(2,6,23,0.05);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .stat b{ color: var(--text); }
+
+    .section{
+      margin-top:18px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      overflow:hidden;
+      background: rgba(255,255,255,0.78);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(2,6,23,0.02);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .section-head h2{
+      margin:0;
+      font-size:1.02rem;
+      letter-spacing:0.2px;
+    }
+
+    .count{
+      color: var(--muted);
+      font-size:0.9rem;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap:12px;
+      padding:14px;
+    }
+
+    .card{
+      padding:14px;
+      border-radius: 16px;
+      background: rgba(2,6,23,0.03);
+      border: 1px solid rgba(15,23,42,0.10);
+      transition: 0.18s;
+      position:relative;
+      overflow:hidden;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      background: var(--cardHover);
+      border-color: rgba(37,99,235,0.25);
+    }
+
+    .card a{
+      color: var(--text);
+      text-decoration:none;
+      display:block;
+      font-weight: 650;
+      line-height:1.25;
+      font-size: 0.98rem;
+    }
+
+    .meta{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .pill{
+      font-size:0.78rem;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid rgba(15,23,42,0.12);
+      background: rgba(255,255,255,0.70);
+      color: rgba(15,23,42,0.70);
+    }
+
+    .pill.primary{
+      border-color: rgba(37,99,235,0.25);
+      background: rgba(37,99,235,0.10);
+      color: rgba(15,23,42,0.88);
+    }
+
+    .pill.good{
+      border-color: rgba(16,185,129,0.25);
+      background: rgba(16,185,129,0.10);
+      color: rgba(15,23,42,0.88);
+    }
+
+    .empty{
+      padding: 18px 16px 20px;
+      color: var(--muted);
+      text-align:center;
+      border-top:1px solid var(--border);
+    }
+
+    footer{
+      margin-top: 24px;
+      text-align:center;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn{
+      cursor:pointer;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.78);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      color: var(--text);
+      box-shadow: 0 8px 18px rgba(2,6,23,0.05);
+      transition: 0.18s;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="title">
+        <h1>Shadow Antibiogram — Results</h1>
+        <p class="subtitle">
+          Browse network visualizations and use-case outputs.
+          Use free-form search like <code class="kbd">ecoli urine 2020 fdr</code> (order doesn’t matter).
+        </p>
+        <div class="hint">
+          Power search: quoted phrases <code class="kbd">"blood culture"</code>,
+          exclude <code class="kbd">-raw</code>, OR with <code class="kbd">raw|fdr</code>.
+        </div>
+      </div>
+
+      <div class="topbar">
+        <div class="search" title='Search examples: ecoli urine 2020 fdr | "blood culture" -raw | raw|fdr'>
+          🔎
+          <input id="searchInput" type="text" placeholder='Try: ecoli urine 2020 fdr   or   "blood culture" phi' />
+        </div>
+
+        <div class="chipbar" id="chipbar">
+          <div class="chip active" data-filter="all">All</div>
+          <div class="chip" data-filter="networks">Networks</div>
+          <div class="chip" data-filter="use_case1">Context (Use Case 1)</div>
+          <div class="chip" data-filter="use_case2">Temporal (Use Case 2)</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="clearBtn" title="Clear search">Clear search</button>
+      <button class="btn" id="openAllBtn" title="Open filtered results (be careful: can open many tabs)">Open filtered results</button>
+    </div>
+
+    <div id="sections"></div>
+
+    <footer>
+      Examples:
+      <code class="kbd">ecoli blood 2020</code> ·
+      <code class="kbd">klebsiella urine phi</code> ·
+      <code class="kbd">staph blood -raw</code> ·
+      <code class="kbd">icu fdr</code> ·
+      <code class="kbd">community -raw</code>
+    </footer>
+  </div>
+
+  <script>
+    // ============================================================
+    // FILE LISTS (relative to docs/index.html)
+    // ============================================================
+    const DATA = {
+      networks: [
+        "networks/net_Escherichia_Blood_Culture_cosine.html",
+        "networks/net_Escherichia_Blood_Culture_dice.html",
+        "networks/net_Escherichia_Blood_Culture_jaccard.html",
+        "networks/net_Escherichia_Blood_Culture_phi.html",
+        "networks/net_Escherichia_Urine_cosine.html",
+        "networks/net_Escherichia_Urine_dice.html",
+        "networks/net_Escherichia_Urine_jaccard.html",
+        "networks/net_Escherichia_Urine_phi.html",
+        "networks/net_Klebsiella_Blood_Culture_cosine.html",
+        "networks/net_Klebsiella_Blood_Culture_dice.html",
+        "networks/net_Klebsiella_Blood_Culture_jaccard.html",
+        "networks/net_Klebsiella_Blood_Culture_phi.html",
+        "networks/net_Klebsiella_Urine_cosine.html",
+        "networks/net_Klebsiella_Urine_dice.html",
+        "networks/net_Klebsiella_Urine_jaccard.html",
+        "networks/net_Klebsiella_Urine_phi.html",
+        "networks/net_Proteus_Blood_Culture_cosine.html",
+        "networks/net_Proteus_Blood_Culture_dice.html",
+        "networks/net_Proteus_Blood_Culture_jaccard.html",
+        "networks/net_Proteus_Blood_Culture_phi.html",
+        "networks/net_Proteus_Urine_cosine.html",
+        "networks/net_Proteus_Urine_dice.html",
+        "networks/net_Proteus_Urine_jaccard.html",
+        "networks/net_Proteus_Urine_phi.html",
+        "networks/net_Pseudomonas_Blood_Culture_cosine.html",
+        "networks/net_Pseudomonas_Blood_Culture_dice.html",
+        "networks/net_Pseudomonas_Blood_Culture_jaccard.html",
+        "networks/net_Pseudomonas_Blood_Culture_phi.html",
+        "networks/net_Pseudomonas_Urine_cosine.html",
+        "networks/net_Pseudomonas_Urine_dice.html",
+        "networks/net_Pseudomonas_Urine_jaccard.html",
+        "networks/net_Pseudomonas_Urine_phi.html",
+        "networks/net_Staphylococcus_Blood_Culture_cosine.html",
+        "networks/net_Staphylococcus_Blood_Culture_dice.html",
+        "networks/net_Staphylococcus_Blood_Culture_jaccard.html",
+        "networks/net_Staphylococcus_Blood_Culture_phi.html",
+        "networks/net_Staphylococcus_Urine_cosine.html",
+        "networks/net_Staphylococcus_Urine_dice.html",
+        "networks/net_Staphylococcus_Urine_jaccard.html",
+        "networks/net_Staphylococcus_Urine_phi.html",
+        "networks/net_Streptococcus_Blood_Culture_cosine.html",
+        "networks/net_Streptococcus_Blood_Culture_dice.html",
+        "networks/net_Streptococcus_Blood_Culture_jaccard.html",
+        "networks/net_Streptococcus_Blood_Culture_phi.html",
+        "networks/net_Streptococcus_Urine_cosine.html",
+        "networks/net_Streptococcus_Urine_dice.html",
+        "networks/net_Streptococcus_Urine_jaccard.html",
+        "networks/net_Streptococcus_Urine_phi.html",
+      ],
+
+      // Context (Use Case 1)
+      use_case1: [
+        "use_case1/net_temporal_ecoli_blood_2019_FDR.html",
+        "use_case1/net_temporal_ecoli_blood_2019_raw.html",
+        "use_case1/net_temporal_ecoli_blood_2020_FDR.html",
+        "use_case1/net_temporal_ecoli_blood_2020_raw.html",
+        "use_case1/net_temporal_ecoli_blood_2021_FDR.html",
+        "use_case1/net_temporal_ecoli_blood_2021_raw.html",
+        "use_case1/net_temporal_ecoli_blood_2022_FDR.html",
+        "use_case1/net_temporal_ecoli_blood_2022_raw.html",
+        "use_case1/net_temporal_ecoli_blood_2023_FDR.html",
+        "use_case1/net_temporal_ecoli_blood_2023_raw.html",
+        "use_case1/net_temporal_ecoli_urine_2019_FDR.html",
+        "use_case1/net_temporal_ecoli_urine_2019_raw.html",
+        "use_case1/net_temporal_ecoli_urine_2020_FDR.html",
+        "use_case1/net_temporal_ecoli_urine_2020_raw.html",
+        "use_case1/net_temporal_ecoli_urine_2021_FDR.html",
+        "use_case1/net_temporal_ecoli_urine_2021_raw.html",
+        "use_case1/net_temporal_ecoli_urine_2022_FDR.html",
+        "use_case1/net_temporal_ecoli_urine_2022_raw.html",
+        "use_case1/net_temporal_ecoli_urine_2023_FDR.html",
+        "use_case1/net_temporal_ecoli_urine_2023_raw.html",
+      ],
+
+      // Temporal (Use Case 2)
+      use_case2: [
+        "use_case2/net_ecoli_blood_care_divergence_context1_FDR.html",
+        "use_case2/net_ecoli_blood_care_divergence_context1_raw.html",
+        "use_case2/net_ecoli_blood_care_divergence_context2_FDR.html",
+        "use_case2/net_ecoli_blood_care_divergence_context2_raw.html",
+        "use_case2/net_ecoli_blood_organization_type_divergence_context1_FDR.html",
+        "use_case2/net_ecoli_blood_organization_type_divergence_context1_raw.html",
+        "use_case2/net_ecoli_blood_organization_type_divergence_context2_FDR.html",
+        "use_case2/net_ecoli_blood_organization_type_divergence_context2_raw.html",
+        "use_case2/net_ecoli_blood_ward_divergence_context1_FDR.html",
+        "use_case2/net_ecoli_blood_ward_divergence_context1_raw.html",
+        "use_case2/net_ecoli_blood_ward_divergence_context2_FDR.html",
+        "use_case2/net_ecoli_blood_ward_divergence_context2_raw.html",
+        "use_case2/net_ecoli_urine_care_divergence_context1_FDR.html",
+        "use_case2/net_ecoli_urine_care_divergence_context1_raw.html",
+        "use_case2/net_ecoli_urine_care_divergence_context2_FDR.html",
+        "use_case2/net_ecoli_urine_care_divergence_context2_raw.html",
+        "use_case2/net_ecoli_urine_hospital_level_context1_FDR.html",
+        "use_case2/net_ecoli_urine_hospital_level_context1_raw.html",
+        "use_case2/net_ecoli_urine_hospital_level_context2_FDR.html",
+        "use_case2/net_ecoli_urine_hospital_level_context2_raw.html",
+        "use_case2/net_ecoli_urine_organization_type_divergence_context1_FDR.html",
+        "use_case2/net_ecoli_urine_organization_type_divergence_context1_raw.html",
+        "use_case2/net_ecoli_urine_organization_type_divergence_context2_FDR.html",
+        "use_case2/net_ecoli_urine_organization_type_divergence_context2_raw.html",
+        "use_case2/net_ecoli_urine_sex_divergence_context1_FDR.html",
+        "use_case2/net_ecoli_urine_sex_divergence_context1_raw.html",
+        "use_case2/net_ecoli_urine_sex_divergence_context2_FDR.html",
+        "use_case2/net_ecoli_urine_sex_divergence_context2_raw.html",
+        "use_case2/net_ecoli_urine_ward_divergence_context1_FDR.html",
+        "use_case2/net_ecoli_urine_ward_divergence_context1_raw.html",
+        "use_case2/net_ecoli_urine_ward_divergence_context2_FDR.html",
+        "use_case2/net_ecoli_urine_ward_divergence_context2_raw.html",
+        "use_case2/net_klebsiella_blood_hospital_level_context1_FDR.html",
+        "use_case2/net_klebsiella_blood_hospital_level_context1_raw.html",
+        "use_case2/net_klebsiella_blood_hospital_level_context2_FDR.html",
+        "use_case2/net_klebsiella_blood_hospital_level_context2_raw.html",
+        "use_case2/net_staph_blood_ward_divergence_context1_FDR.html",
+        "use_case2/net_staph_blood_ward_divergence_context1_raw.html",
+        "use_case2/net_staph_blood_ward_divergence_context2_FDR.html",
+        "use_case2/net_staph_blood_ward_divergence_context2_raw.html",
+      ],
+    };
+
+    // =========================
+    // Context label mappings (your requested changes)
+    // =========================
+    const CONTEXT_LABELS = {
+      ward: {
+        context1: "ICU",
+        context2: "General Ward",
+      },
+      care: {
+        context1: "Inpatient/Hospital",
+        context2: "Community/OutPatient",
+      }
+    };
+
+    function contextDomain(lowerPath){
+      // Only apply these mappings when file is a *ward* or *care* context file
+      if (lowerPath.includes("_ward_")) return "ward";
+      if (lowerPath.includes("_care_")) return "care";
+      return null;
+    }
+
+    // =========================
+    // Search helpers
+    // =========================
+    function prettyName(path){
+      const file = path.split("/").pop().replace(".html","");
+      return file.replaceAll("_"," ");
+    }
+
+    // Cleaner display name for context files:
+    // - Replace "context1" -> "ICU" (ward) OR "Inpatient/Hospital" (care)
+    // - Replace "context2" -> "General Ward" (ward) OR "Community/OutPatient" (care)
+    // - Hide extra words ("divergence", "context1/2") by converting to label
+    function displayName(path){
+      const lower = path.toLowerCase();
+      let name = prettyName(path);
+
+      const domain = contextDomain(lower);
+      if (domain){
+        const map = CONTEXT_LABELS[domain];
+
+        // Replace context tokens with meaningful labels
+        name = name.replace(/context1/gi, map.context1);
+        name = name.replace(/context2/gi, map.context2);
+
+        // Optional cleanup: make it nicer for humans
+        name = name.replace(/\bdivergence\b/gi, "").replace(/\s{2,}/g, " ").trim();
+      }
+
+      // Small cosmetics
+      name = name.replace(/\bnet\b/gi, "Net");
+      return name;
+    }
+
+    function sectionTitle(k){
+      if(k === "networks") return "Networks";
+      if(k === "use_case1") return "Context (Use Case 1)";
+      if(k === "use_case2") return "Temporal (Use Case 2)";
+      return k;
+    }
+
+    function searchableText(path, sectionKey){
+      const lower = path.toLowerCase();
+      const pretty = prettyName(path).toLowerCase();
+      const shown = displayName(path).toLowerCase();
+
+      // Synonyms
+      const synonyms = [];
+      if (lower.includes("escherichia")) synonyms.push("ecoli e. coli e coli");
+      if (lower.includes("ecoli")) synonyms.push("escherichia e. coli e coli");
+      if (lower.includes("staph")) synonyms.push("staphylococcus");
+      if (lower.includes("staphylococcus")) synonyms.push("staph");
+
+      // Context domain synonyms (so searching "icu" works)
+      const domain = contextDomain(lower);
+      if (domain){
+        const map = CONTEXT_LABELS[domain];
+        if (lower.includes("context1")) synonyms.push(map.context1.toLowerCase());
+        if (lower.includes("context2")) synonyms.push(map.context2.toLowerCase());
+        synonyms.push(domain); // "ward" or "care"
+      }
+
+      const sectionAliases = {
+        networks: "networks network similarity cosine dice jaccard phi",
+        use_case1: "use_case1 usecase1 use-case-1 use case 1 context",
+        use_case2: "use_case2 usecase2 use-case-2 use case 2 temporal divergence context ward care hospital organization sex",
+      };
+
+      return [
+        lower,                // full path
+        sectionKey.toLowerCase(),
+        (sectionAliases[sectionKey] || ""),
+        pretty,               // filename words
+        shown,                // humanized display words
+        synonyms.join(" ")
+      ].join(" ");
+    }
+
+    // "You can hide the rest" — keep pills minimal & meaningful.
+    // We will:
+    // - Keep section pill
+    // - Organism + specimen (blood/urine) if present
+    // - For ward/care context files: show ICU/General Ward or Inpatient/Hospital/Community/OutPatient
+    // - Show FDR/Raw
+    // - Hide other extra pills (hospital level, org type, sex, etc.)
+    function tagsFor(path, sectionKey){
+      const lower = path.toLowerCase();
+      const tags = [];
+
+      // section pill
+      if(sectionKey === "networks") tags.push({t:"Networks", cls:"primary"});
+      if(sectionKey === "use_case1") tags.push({t:"Context (UC1)", cls:"primary"});
+      if(sectionKey === "use_case2") tags.push({t:"Temporal (UC2)", cls:"primary"});
+
+      // organism (minimal)
+      if(lower.includes("ecoli") || lower.includes("escherichia")) tags.push({t:"E. coli"});
+      else if(lower.includes("klebsiella")) tags.push({t:"Klebsiella"});
+      else if(lower.includes("proteus")) tags.push({t:"Proteus"});
+      else if(lower.includes("pseudomonas")) tags.push({t:"Pseudomonas"});
+      else if(lower.includes("staph")) tags.push({t:"Staph"});
+      else if(lower.includes("streptococcus")) tags.push({t:"Strep"});
+
+      // specimen
+      if(lower.includes("blood")) tags.push({t:"Blood"});
+      if(lower.includes("urine")) tags.push({t:"Urine"});
+
+      // context label (only for ward/care context files)
+      const domain = contextDomain(lower);
+      if (domain){
+        const map = CONTEXT_LABELS[domain];
+        if (lower.includes("context1")) tags.push({t: map.context1});
+        if (lower.includes("context2")) tags.push({t: map.context2});
+      }
+
+      // outputs
+      if(lower.includes("fdr")) tags.push({t:"FDR", cls:"good"});
+      if(lower.includes("raw")) tags.push({t:"Raw"});
+
+      // years (only if present)
+      ["2019","2020","2021","2022","2023"].forEach(y=>{
+        if(lower.includes(y)) tags.push({t:y});
+      });
+
+      return tags.slice(0,7);
+    }
+
+    // Query parsing:
+    // - supports "quoted phrases"
+    // - exclude with -term
+    // - OR within token: raw|fdr
+    function parseQuery(q){
+      const out = { include: [], exclude: [] };
+      const s = q.trim();
+      if(!s) return out;
+
+      const re = /"([^"]+)"|(\S+)/g;
+      let m;
+      while((m = re.exec(s)) !== null){
+        const token = (m[1] || m[2] || "").trim();
+        if(!token) continue;
+
+        if(token.startsWith("-") && token.length > 1){
+          out.exclude.push(token.slice(1).toLowerCase());
+        }else{
+          out.include.push(token.toLowerCase());
+        }
+      }
+      return out;
+    }
+
+    function tokenMatches(text, token){
+      if(token.includes("|")){
+        return token.split("|").some(t => t && text.includes(t));
+      }
+      return text.includes(token);
+    }
+
+    function matchesQuery(text, parsed){
+      for(const ex of parsed.exclude){
+        if(tokenMatches(text, ex)) return false;
+      }
+      for(const inc of parsed.include){
+        if(!tokenMatches(text, inc)) return false;
+      }
+      return true;
+    }
+
+    // =========================
+    // Build index
+    // =========================
+    const INDEX = [];
+    for(const [sectionKey, files] of Object.entries(DATA)){
+      for(const path of files){
+        INDEX.push({
+          sectionKey,
+          path,
+          pretty: displayName(path),              // UPDATED: nicer name
+          text: searchableText(path, sectionKey), // UPDATED: includes ICU/General Ward etc.
+          tags: tagsFor(path, sectionKey)         // UPDATED: minimal tags
+        });
+      }
+    }
+
+    // =========================
+    // Render
+    // =========================
+    const sectionsEl = document.getElementById("sections");
+    const statsEl = document.getElementById("stats");
+    const searchInput = document.getElementById("searchInput");
+    const chips = [...document.querySelectorAll(".chip")];
+    const clearBtn = document.getElementById("clearBtn");
+    const openAllBtn = document.getElementById("openAllBtn");
+
+    let activeFilter = "all";
+    let parsedQuery = parseQuery("");
+
+    function buildSection(title, sectionKey, items){
+      const wrapper = document.createElement("div");
+      wrapper.className = "section";
+
+      const head = document.createElement("div");
+      head.className = "section-head";
+
+      const h2 = document.createElement("h2");
+      h2.textContent = title;
+
+      const count = document.createElement("div");
+      count.className = "count";
+      count.textContent = `${items.length} result(s)`;
+
+      head.appendChild(h2);
+      head.appendChild(count);
+      wrapper.appendChild(head);
+
+      if(items.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "No results found. Try fewer keywords or remove exclusions.";
+        wrapper.appendChild(empty);
+        return wrapper;
+      }
+
+      const grid = document.createElement("div");
+      grid.className = "grid";
+
+      items.forEach(item=>{
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const a = document.createElement("a");
+        a.href = item.path;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = item.pretty;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        item.tags.forEach(obj=>{
+          const p = document.createElement("span");
+          p.className = "pill" + (obj.cls ? " " + obj.cls : "");
+          p.textContent = obj.t;
+          meta.appendChild(p);
+        });
+
+        card.appendChild(a);
+        card.appendChild(meta);
+        grid.appendChild(card);
+      });
+
+      wrapper.appendChild(grid);
+      return wrapper;
+    }
+
+    function filteredItems(){
+      const items = INDEX
+        .filter(x => activeFilter === "all" ? true : x.sectionKey === activeFilter)
+        .filter(x => matchesQuery(x.text, parsedQuery));
+      return items;
+    }
+
+    function renderStats(items){
+      const total = INDEX.length;
+      const shown = items.length;
+
+      const bySection = { networks:0, use_case2:0, use_case1:0 };
+      items.forEach(x => { bySection[x.sectionKey] = (bySection[x.sectionKey]||0) + 1; });
+
+      statsEl.innerHTML = "";
+      const mk = (label, val) => {
+        const d = document.createElement("div");
+        d.className = "stat";
+        d.innerHTML = `<b>${val}</b> ${label}`;
+        return d;
+      };
+
+      statsEl.appendChild(mk("shown", shown));
+      statsEl.appendChild(mk("total files", total));
+      statsEl.appendChild(mk("networks", bySection.networks || 0));
+      statsEl.appendChild(mk("temporal (UC2)", bySection.use_case2 || 0));
+      statsEl.appendChild(mk("context (UC1)", bySection.use_case1 || 0));
+    }
+
+    function render(){
+      const itemsAll = filteredItems();
+      renderStats(itemsAll);
+
+      sectionsEl.innerHTML = "";
+
+      const keys = ["networks","use_case1","use_case2"];
+      const useKeys = activeFilter === "all" ? keys : keys.filter(k => k === activeFilter);
+
+      for(const k of useKeys){
+        const items = itemsAll.filter(x => x.sectionKey === k);
+        sectionsEl.appendChild(buildSection(sectionTitle(k), k, items));
+      }
+    }
+
+    // =========================
+    // UI Events
+    // =========================
+    chips.forEach(chip=>{
+      chip.addEventListener("click", ()=>{
+        chips.forEach(c=>c.classList.remove("active"));
+        chip.classList.add("active");
+        activeFilter = chip.dataset.filter;
+        render();
+      });
+    });
+
+    searchInput.addEventListener("input", (e)=>{
+      parsedQuery = parseQuery(e.target.value);
+      render();
+    });
+
+    clearBtn.addEventListener("click", ()=>{
+      searchInput.value = "";
+      parsedQuery = parseQuery("");
+      render();
+      searchInput.focus();
+    });
+
+    // Opens only the currently-filtered results (cap to avoid too many tabs)
+    openAllBtn.addEventListener("click", ()=>{
+      const items = filteredItems();
+      const cap = 25;
+      const toOpen = items.slice(0, cap);
+
+      toOpen.forEach(x => window.open(x.path, "_blank", "noopener,noreferrer"));
+
+      if(items.length > cap){
+        alert(`Opened ${cap} tabs. ${items.length - cap} more results were not opened to avoid tab spam.`);
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+{
+  "Fluoroquinolone": [
+    "LEV - Levofloxacin_Tested",
+    "NOR - Norfloxacin_Tested",
+    "OFX - Ofloxacin_Tested",
+    "CIP - Ciprofloxacin_Tested",
+    "MOX - Moxifloxacin_Tested"
+  ],
+  "Aminoglycoside": [
+    "GEN - Gentamicin_Tested",
+    "AMK - Amikacin_Tested",
+    "TOB - Tobramycin_Tested"
+  ],
+  "Penicillin (\u03b2-lactam)": [
+    "MCL - Mecillinam_Tested",
+    "OXA - Oxacillin_Tested",
+    "AMX - Amoxicillin_Tested",
+    "MZL - Mezlocillin_Tested",
+    "FLU - Flucloxacillin_Tested",
+    "PIP - Piperacillin_Tested",
+    "AMP - Ampicillin_Tested",
+    "PEN - Penicillin_Tested"
+  ],
+  "\u03b2-lactam/\u03b2-lactamase inhibitor": [
+    "AMS - Ampicillin/Sulbactam_Tested",
+    "AMC - Amoxicillin/clavulanic acid_Tested",
+    "CZA - Ceftazidim/Avibactam_Tested",
+    "PIT - Piperacillin/Tazobactam_Tested"
+  ],
+  "Monobactam (\u03b2-lactam)": [
+    "AZT - Aztreonam_Tested"
+  ],
+  "Third-gen cephalosporin (\u03b2-lactam)": [
+    "CRO - Ceftriaxon_Tested",
+    "CFI - Cefixim_Tested",
+    "CTX - Cefotaxim_Tested",
+    "CAZ - Ceftazidim_Tested",
+    "CPO - Cefpodoxim_Tested",
+    "CPP - Cefpodoxim-Proxetil_Tested"
+  ],
+  "Fourth-gen cephalosporin (\u03b2-lactam)": [
+    "CEP - Cefepim_Tested"
+  ],
+  "First-gen cephalosporin (\u03b2-lactam)": [
+    "CEZ - Cefazolin_Tested",
+    "CEX - Cefalexin_Tested",
+    "CFR - Cefadroxil_Tested"
+  ],
+  "Amphenicol": [
+    "CMP - Chloramphenicol_Tested"
+  ],
+  "Tetracycline": [
+    "TET - Tetracyclin_Tested",
+    "DOX - Doxycyclin_Tested"
+  ],
+  "Lincosamide": [
+    "CLI - Clindamycin_Tested"
+  ],
+  "Polymyxin": [
+    "COL - Colistin_Tested"
+  ],
+  "Glycopeptide": [
+    "VAN - Vancomycin_Tested",
+    "TPL - Teicoplanin_Tested"
+  ],
+  "Lipopeptide": [
+    "DPT - Daptomycin_Tested"
+  ],
+  "Second-gen cephalosporin (\u03b2-lactam)": [
+    "CFA - Cefuroxim-Axetil_Tested",
+    "CEC - Cefaclor_Tested",
+    "COX - Cefoxitin_Tested",
+    "CXM - Cefuroxim_Tested"
+  ],
+  "Oxazolidinone": [
+    "LIZ - Linezolid_Tested"
+  ],
+  "Macrolide": [
+    "AZM - Azithromycin_Tested",
+    "ERY - Erythromycin_Tested",
+    "CLR - Clarithromycin_Tested",
+    "ROX - Roxithromycin_Tested"
+  ],
+  "Nitrofuran": [
+    "NFT - Nitrofurantoin_Tested"
+  ],
+  "Rifamycin": [
+    "RAM - Rifampicin_Tested"
+  ],
+  "Glycylcycline": [
+    "TGC - Tigecyclin_Tested"
+  ],
+  "Carbapenem (\u03b2-lactam)": [
+    "IMP - Imipenem_Tested",
+    "MER - Meropenem_Tested",
+    "ERT - Ertapenem_Tested"
+  ],
+  "Steroid antibiotic": [
+    "FUS - Fusidic acid_Tested"
+  ],
+  "Sulfonamide/Trimethoprim combo": [
+    "SXT - Co-Trimoxazol_Tested"
+  ],
+  "Dihydrofolate reductase inhibitor": [
+    "TRP - Trimethoprim_Tested"
+  ],
+  "Nitroimidazole": [
+    "MTR - Metronidazol_Tested"
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "\u03b2-lactam": [
+    "AMC - Amoxicillin/clavulanic acid_Tested",
+    "OXA - Oxacillin_Tested",
+    "CAZ - Ceftazidim_Tested",
+    "CPP - Cefpodoxim-Proxetil_Tested",
+    "FLU - Flucloxacillin_Tested",
+    "PIP - Piperacillin_Tested",
+    "AMP - Ampicillin_Tested",
+    "MER - Meropenem_Tested",
+    "CTX - Cefotaxim_Tested",
+    "MCL - Mecillinam_Tested",
+    "CRO - Ceftriaxon_Tested",
+    "ERT - Ertapenem_Tested",
+    "CPO - Cefpodoxim_Tested",
+    "CFR - Cefadroxil_Tested",
+    "PIT - Piperacillin/Tazobactam_Tested",
+    "CEC - Cefaclor_Tested",
+    "AZT - Aztreonam_Tested",
+    "CEX - Cefalexin_Tested",
+    "AMX - Amoxicillin_Tested",
+    "CFI - Cefixim_Tested",
+    "COX - Cefoxitin_Tested",
+    "CZA - Ceftazidim/Avibactam_Tested",
+    "CEZ - Cefazolin_Tested",
+    "IMP - Imipenem_Tested",
+    "MZL - Mezlocillin_Tested",
+    "CFA - Cefuroxim-Axetil_Tested",
+    "AMS - Ampicillin/Sulbactam_Tested",
+    "CEP - Cefepim_Tested",
+    "PEN - Penicillin_Tested",
+    "CXM - Cefuroxim_Tested"
+  ],
+  "Aminoglycoside": [
+    "GEN - Gentamicin_Tested",
+    "AMK - Amikacin_Tested",
+    "TOB - Tobramycin_Tested"
+  ],
+  "Fluoroquinolone": [
+    "LEV - Levofloxacin_Tested",
+    "NOR - Norfloxacin_Tested",
+    "OFX - Ofloxacin_Tested",
+    "CIP - Ciprofloxacin_Tested",
+    "MOX - Moxifloxacin_Tested"
+  ],
+  "Tetracycline": [
+    "TET - Tetracyclin_Tested",
+    "DOX - Doxycyclin_Tested"
+  ],
+  "Macrolide": [
+    "AZM - Azithromycin_Tested",
+    "ERY - Erythromycin_Tested",
+    "CLR - Clarithromycin_Tested",
+    "ROX - Roxithromycin_Tested"
+  ],
+  "Lincosamide": [
+    "CLI - Clindamycin_Tested"
+  ],
+  "Glycopeptide": [
+    "VAN - Vancomycin_Tested",
+    "TPL - Teicoplanin_Tested"
+  ],
+  "Lipopeptide": [
+    "DPT - Daptomycin_Tested"
+  ],
+  "Oxazolidinone": [
+    "LIZ - Linezolid_Tested"
+  ],
+  "Amphenicol": [
+    "CMP - Chloramphenicol_Tested"
+  ],
+  "Polymyxin": [
+    "COL - Colistin_Tested"
+  ],
+  "Nitrofuran": [
+    "NFT - Nitrofurantoin_Tested"
+  ],
+  "Rifamycin": [
+    "RAM - Rifampicin_Tested"
+  ],
+  "Glycylcycline": [
+    "TGC - Tigecyclin_Tested"
+  ],
+  "Dihydrofolate reductase inhibitor": [
+    "TRP - Trimethoprim_Tested"
+  ],
+  "Steroid antibiotic": [
+    "FUS - Fusidic acid_Tested"
+  ]
+}
