@@ -7,7 +7,7 @@ datasets/feather_chunks/
 datasets/general_data_summary/
 datasets/processed/
 datasets/structured/
-datasets/WHO_Aware_data/
+#datasets/WHO_Aware_data/
 datasets/WHO_Aware_general_data_summary/
 datasets-archive/
 datasets/CompleteData.csv
