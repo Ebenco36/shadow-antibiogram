@@ -223,7 +223,7 @@ nonsense.ipynb
 cohort_for_reproducibility.py
 ARSMonthlyAggregator.py
 # dataset_sample.py
-scripts/
+# scripts/
 benchmarks_escherichia_full_vs_agg/
 network_compare_pub/
 sim_for_viz2.csv
