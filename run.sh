@@ -190,9 +190,9 @@ fi
 # )
 
 MODULES=(
-  "src.runners.Preload"
-  "src.runners.DataProcessing"
-  "src.AntibioticResistanceAggregator"
+  # "src.runners.Preload"
+  # "src.runners.DataProcessing"
+  # "src.AntibioticResistanceAggregator"
   "src.controllers.AMR.scripts.run_comprehensive_analysis"
   "src.controllers.AMR.evaluation.AMR_network_benchmark_runner"
 )

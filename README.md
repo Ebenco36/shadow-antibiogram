@@ -1,6 +1,6 @@
 # Shadow Antibiogram: Co-testing Network Pipeline
 
-This repository implements a co-testing analysis pipeline to construct **Shadow Antibiograms**: empirical networks that summarise **which antibiotics are tested together** in routine microbiology workflows.
+This repository implements a co-testing analysis pipeline to construct **Shadow Antibiograms**: empirical networks that summarise **which antibiotics are tested together** in routine microbiology workflows.  
 The analysis is based on **test-incidence** (tested vs not tested), rather than susceptibility outcomes, and is designed to characterise diagnostic ordering behaviour across pathogens, specimen types, clinical contexts, and time.
 
 The pipeline is intentionally simple to run and reproducible, with a single entry script that bootstraps the environment and executes all configured analyses.
@@ -28,55 +28,88 @@ All commands below assume execution from the repository root directory.
 
 ## Data availability and setup
 
-The dataset used in this study is publicly available via **Zenodo**.
+The dataset used in this study is now included directly in this repository under `datasets/WHO_Aware_data/`.  
+To protect patient privacy while preserving the ability to reproduce all analyses, we have **aggregated** the original isolate-level data into contingency tables of co-testing patterns within predefined strata. The aggregation process preserves all pairwise co-testing relationships required for network construction and has been validated against the full dataset to ensure no loss of analytical quality.
 
-**Zenodo record**
-DOI: `10.5281/zenodo.18274234`
-File: `WHO_Aware_data.tar.xz`
+**The pipeline is designed to work with both the original complete (isolate-level) dataset and the aggregated version.** For public release and replication, we provide the aggregated data; however, if you have access to the original isolate-level data format, the pipeline can process it directly.
 
-The archive contains preprocessed antimicrobial susceptibility testing metadata required to reproduce all analyses reported in the manuscript. No patient-identifiable data are included.
+### Dataset contents (aggregated)
 
-### Downloading the dataset
+The `datasets/WHO_Aware_data/` directory contains one or more CSV files with the following structure (one row per antibiotic pair per stratum):
 
-From the repository root directory:
+| Column                | Description                                                                                   |
+|-----------------------|-----------------------------------------------------------------------------------------------|
+| `Pathogen`            | Full pathogen name (e.g., *Escherichia coli*)                                                 |
+| `PathogenGenus`       | Genus level (e.g., *Escherichia*)                                                             |
+| `GramType`            | Gram classification (Positive / Negative / etc.)                                              |
+| `Sex`                 | Patient sex (if applicable)                                                                   |
+| `CareType`            | In-Patient / Out-Patient / etc.                                                               |
+| `TextMaterialgroupRkiL0` | Specimen type (e.g., Urine, Blood Culture)                                                  |
+| `ARS_WardType`        | Ward type (Normal Ward, ICU, etc.)                                                            |
+| `BroadAgeGroup`       | Age group category                                                                            |
+| `HighLevelAgeRange`   | Detailed age range                                                                            |
+| `Hospital_Priority`   | Hospital level (High / Medium / Low)                                                          |
+| `Care_Complexity`     | Complexity of care (Tertiary & Specialized, Primary/Secondary, etc.)                          |
+| `Year`                | Year of isolation                                                                             |
+| `ab_1`                | First antibiotic (full name with `_Tested` suffix)                                            |
+| `ab_2`                | Second antibiotic                                                                             |
+| `a`                   | Count of isolates where **both** antibiotics were tested                                      |
+| `b`                   | Count where **only ab_1** was tested (ab_1 tested, ab_2 not)                                  |
+| `c`                   | Count where **only ab_2** was tested (ab_1 not, ab_2 tested)                                  |
+| `d`                   | Count where **neither** antibiotic was tested                                                 |
 
-```bash
-mkdir -p datasets && \
-wget -O datasets/WHO_Aware_data.tar.xz \
-"https://zenodo.org/records/18274234/files/WHO_Aware_data.tar.xz?download=1" && \
-tar -xf datasets/WHO_Aware_data.tar.xz -C . --strip-components=1 && \
-rm datasets/WHO_Aware_data.tar.xz
-```
+All analyses reported in the manuscript can be reproduced using these aggregated tables. No additional data preprocessing is required before running the pipeline.
 
-Alternatively, using `curl`:
+> **Note:** The original isolate-level data are not included due to privacy constraints, but the aggregated format captures all necessary information for co-testing network analysis and has been validated to yield identical results. If you have your own isolate-level data, the pipeline can accept it with minimal adaptation (see [Data requirements](#data-requirements)).
 
-```bash
-mkdir -p datasets && \
-curl -L -o datasets/WHO_Aware_data.tar.xz \
-"https://zenodo.org/records/18274234/files/WHO_Aware_data.tar.xz?download=1" && \
-tar -xf datasets/WHO_Aware_data.tar.xz -C . --strip-components=1 && \
-rm datasets/WHO_Aware_data.tar.xz
-```
+---
 
-After extraction, the expected path is:
+### From original to aggregated: an illustration
 
-```text
-datasets/WHO_Aware_data/
-```
+To make the aggregation process transparent, consider a small hypothetical set of original isolate-level records for *E. coli* from urine specimens in 2022. Each row represents one isolate, with binary indicators showing which antibiotics were tested.
 
-No additional data preprocessing is required.
+**Original isolate-level data (simplified):**
+
+| Pathogen  | Year | Specimen | Ampicillin_Tested | Gentamicin_Tested | Ciprofloxacin_Tested |
+|-----------|------|----------|-------------------|-------------------|----------------------|
+| E. coli   | 2022 | Urine    | 1                 | 1                 | 0                    |
+| E. coli   | 2022 | Urine    | 1                 | 0                 | 1                    |
+| E. coli   | 2022 | Urine    | 0                 | 1                 | 1                    |
+
+For each antibiotic pair within the stratum defined by `Pathogen = E. coli`, `Year = 2022`, and `Specimen = Urine`, we count isolates in four categories:
+
+- **a** = both tested
+- **b** = only first tested
+- **c** = only second tested
+- **d** = neither tested
+
+**Aggregated contingency table for this stratum:**
+
+| ab_1                     | ab_2                     | a | b | c | d |
+|--------------------------|--------------------------|---|---|---|---|
+| Ampicillin_Tested        | Gentamicin_Tested        | 1 | 1 | 1 | 0 |
+| Ampicillin_Tested        | Ciprofloxacin_Tested     | 1 | 1 | 1 | 0 |
+| Gentamicin_Tested        | Ciprofloxacin_Tested     | 1 | 1 | 1 | 0 |
+
+*Explanation for the first row (Ampicillin vs. Gentamicin):*  
+- Isolate 1 tested both → contributes to **a**  
+- Isolate 2 tested only Ampicillin → contributes to **b**  
+- Isolate 3 tested only Gentamicin → contributes to **c**  
+- No isolate tested neither → **d = 0**
+
+The full dataset includes many such strata (by additional variables like age group, ward type, etc.), and for each stratum every antibiotic pair that appears in at least one isolate is represented. These counts are sufficient to reconstruct all pairwise association measures (Jaccard, Phi, etc.) and to perform statistical tests exactly as if the original isolate-level data were available.
 
 ---
 
 ## Overview of the approach
 
-Given a surveillance dataset of clinical isolates with:
+The pipeline is designed to handle both **complete (isolate-level)** and **aggregated** datasets seamlessly. Given input data with:
 
 * organism metadata (genus and, when available, species),
 * contextual metadata (specimen type, care setting, ward, year),
 * antibiotic testing information (which antibiotics were tested for each isolate),
 
-the pipeline performs the following steps.
+it performs the following steps.
 
 ---
 
@@ -92,6 +125,8 @@ where:
 * `0` indicates that it was not tested.
 
 This representation isolates **diagnostic ordering decisions** and does not depend on resistance or susceptibility results.
+
+When aggregated data are provided, the loader reconstructs the necessary internal structures directly from the contingency tables.
 
 ---
 
@@ -109,8 +144,8 @@ Supported similarity metrics include:
 
 ### 3. Network construction
 
-Antibiotics are represented as nodes in a weighted, undirected graph.
-Edges connect antibiotic pairs whose association exceeds a user-defined threshold (`tau`).
+Antibiotics are represented as nodes in a weighted, undirected graph.  
+Edges connect antibiotic pairs whose association exceeds a user-defined threshold (`tau`).  
 Edge weights store the similarity value.
 
 Each network represents observed co-testing behaviour within a specific analytical cohort.
@@ -119,7 +154,7 @@ Each network represents observed co-testing behaviour within a specific analytic
 
 ### 4. Optional statistical validation
 
-Edges above the similarity threshold can be validated using **Fisher’s exact test** applied to the 2×2 contingency table for each antibiotic pair.
+Edges above the similarity threshold can be validated using **Fisher’s exact test** applied to the 2×2 contingency table for each antibiotic pair.  
 Multiple testing is controlled using **Benjamini–Hochberg false discovery rate (FDR)** correction.
 
 When enabled, only statistically supported edges are retained.
@@ -169,9 +204,8 @@ The `--chdir` flag ensures execution from a writable directory rather than a Slu
 The script automatically:
 
 1. Sets a safe working directory.
-2. Creates or reuses a Python virtual environment:
-
-   * `./.venv` if the repository is writable,
+2. Creates or reuses a Python virtual environment:  
+   * `./.venv` if the repository is writable,  
    * otherwise `~/.venvs/<repo_name>`.
 3. Installs dependencies from `requirements.txt`.
 4. Executes the configured analysis modules sequentially.
@@ -185,18 +219,20 @@ No manual environment setup is required.
 ```text
 shadow-antibiogram/
 ├── datasets/
-│   └── WHO_Aware_data/
-    └── output/
+│   └── WHO_Aware_data/          # Aggregated contingency tables (CSV)
+│       ├── aggregated_data_1.csv
+│       └── ...
+├── output/                       # Pipeline outputs (created at runtime)
 ├── src/
-│   ├── runners/            # Pipeline entry points and orchestration
-│   ├── controllers/        # Analysis workflows (e.g. AMR, co-testing)
-│   ├── data/               # Data loading and preprocessing utilities
-│   ├── networks/           # Network construction and analysis
-│   └── utils/              # Shared helpers and configuration
-│   └── Preprocessing/      # Directory for data preprocessing.
-├── results/                # Output for sensitivity analysis results
-├── results_use_cases/      # Output for use cases
-├── temporal_analysis/      # Output for temporal analysis results
+│   ├── runners/                  # Pipeline entry points and orchestration
+│   ├── controllers/              # Analysis workflows (e.g. AMR, co-testing)
+│   ├── data/                     # Data loading and preprocessing utilities
+│   ├── networks/                 # Network construction and analysis
+│   └── utils/                    # Shared helpers and configuration
+│   └── Preprocessing/            # Directory for data preprocessing.
+├── results/                      # Output for sensitivity analysis results
+├── results_use_cases/            # Output for use cases
+├── temporal_analysis/            # Output for temporal analysis results
 ├── run.sh
 ├── requirements.txt
 └── README.md
@@ -208,13 +244,16 @@ The primary user-facing entry point is `run.sh`. Users do not need to invoke Pyt
 
 ## Data requirements
 
-The data loader must return a dataframe containing at least:
+The pipeline includes a flexible data loader that accepts either:
 
-* a temporal field (`Year` or date),
-* an organisation identifier,
-* organism labels (genus or species),
-* specimen type,
-* antibiotic testing information.
+* **Complete isolate-level data** – a dataframe with at least:  
+  * a temporal field (`Year` or date),  
+  * an organisation identifier (if available),  
+  * organism labels (genus or species),  
+  * specimen type,  
+  * antibiotic testing information (where any recorded value indicates "tested", missing indicates "not tested").
+
+* **Aggregated contingency tables** (as provided in `datasets/WHO_Aware_data/`) – the loader reconstructs the necessary internal structures directly from the counts.
 
 If antibiotic data are recorded as susceptibility results, any recorded value (S, I, R, or MIC) is treated as **tested**, while missing values indicate **not tested**.
 
@@ -259,3 +298,6 @@ If this code is used in a manuscript, relevant methodological references include
 * Louvain modularity optimisation for community detection,
 * Benjamini–Hochberg FDR correction for multiple testing.
 
+---
+
+This README provides all necessary information to understand, run, and reproduce the Shadow Antibiogram pipeline using either the provided aggregated dataset or your own complete isolate-level data format. For any questions or issues, please open an issue on GitHub.
