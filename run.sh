@@ -194,7 +194,7 @@ MODULES=(
   # "src.runners.DataProcessing"
   # "src.AntibioticResistanceAggregator"
   "src.controllers.AMR.scripts.run_comprehensive_analysis"
-  "src.controllers.AMR.evaluation.AMR_network_benchmark_runner"
+  # "src.controllers.AMR.evaluation.AMR_network_benchmark_runner"
 )
 
 for m in "${MODULES[@]}"; do

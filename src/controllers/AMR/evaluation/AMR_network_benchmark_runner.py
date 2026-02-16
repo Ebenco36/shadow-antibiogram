@@ -9,8 +9,6 @@ import pandas as pd
 
 from src.controllers.AMR.use_cases.helper import build_and_save_network_for_cohort
 from src.controllers.AMR.evaluation.jaccard_network_comparator import CompareConfig, JaccardNetworkComparator
-
-
 # -----------------------------
 # Config + cohort spec
 # -----------------------------
