@@ -22,6 +22,13 @@ If you already have a local copy, ensure it is up to date:
 git pull
 ```
 
+## OR
+
+```bash
+pip install shadow-antibiogram
+```
+
+
 All commands below assume execution from the repository root directory.
 
 ---
