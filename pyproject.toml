@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77.0.3", "wheel"]
+requires = ["setuptools>=61.0.0", "wheel"]          # lowered for Python 3.9 compatibility
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,10 +10,11 @@ authors = [
 ]
 description = "A tool for analyzing antibiotic resistance patterns and generating shadow antibiograms"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = { text = "MIT" }
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -24,46 +25,41 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
 ]
 
-# Direct dependencies identified by pipreqs + common scientific packages
 dependencies = [
-    # From pipreqs (with version bounds based on your original requirements)
     "adjusttext>=1.3.0",
     "altair>=6.0.0",
     "auto-mix-prep>=0.2.0",
-    "dash>=2.18.0",               # added because dash-bio depends on it
+    "dash>=2.18.0",
     "dash-bio>=1.0.2",
-    "dask>=2024.0.0",              # from your original: 2025.9.1
+    "dask>=2024.0.0",
     "flask>=3.0.0",
     "geopandas>=1.0.0",
-    "matplotlib>=3.10.0",
+    "matplotlib>=3.5.0",               # lowered for 3.9 compatibility
     "mlxtend>=0.23.0",
     "numpy>=1.26.0",
-    "pandas>=2.3.0",
+    "pandas>=2.0.0",                    # lowered for 3.9 compatibility
     "plotly>=6.5.0",
     "pymannkendall>=1.4.3",
     "pyvis>=0.3.0",
     "ruptures>=1.1.0",
-    "scikit-learn>=1.5.0",
+    "scikit-learn>=1.4.0",               # lowered for 3.9 compatibility
     "scikit-posthocs>=0.11.0",
-    "scipy>=1.13.0",
+    "scipy>=1.12.0",                     # lowered for 3.9 compatibility
     "seaborn>=0.13.0",
     "shapely>=2.0.0",
     "statsmodels>=0.14.0",
-
-    # Common scientific Python packages (likely used, but not flagged by pipreqs)
-    "networkx>=3.5",
-    "python-louvain>=0.16",        # provides 'community' module
+    "networkx>=3.3",                     # lowered for 3.9 compatibility
+    "python-louvain>=0.16",
     "joblib>=1.3.0",
     "tqdm>=4.66.0",
     "requests>=2.31.0",
     "pyyaml>=6.0",
     "packaging>=23.0",
-    "openpyxl>=3.1.0",             # if you read Excel files
-    "xlrd>=2.0.0",                  # if you read older Excel files
-    "pyarrow>=14.0.0", 
+    "openpyxl>=3.1.0",
+    "xlrd>=2.0.0",
+    "pyarrow>=14.0.0",
 ]
 
-# Optional extras
 [project.optional-dependencies]
 ml = [
     "tensorflow>=2.13.0",
@@ -96,28 +92,20 @@ dev = [
     "pre-commit>=3.0.0",
 ]
 
-# Project URLs
 [project.urls]
 Homepage = "https://github.com/Ebenco36/shadow-antibiogram"
 Repository = "https://github.com/Ebenco36/shadow-antibiogram.git"
 "Bug Tracker" = "https://github.com/Ebenco36/shadow-antibiogram/issues"
 
-# If you have a CLI script, define it here (example)
-# [project.scripts]
-# shadow-run = "shadow_antibiogram.cli:main"
-
-# Setuptools configuration
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["shadow_antibiogram*"]
 
-# Include data files (CSV, etc.)
 [tool.setuptools.package-data]
 "shadow_antibiogram" = [
     "controllers/similarity/*.csv",
     "mappers/*.txt",
     "**/*.json",
-    # Add other patterns as needed
 ]
 
 [tool.setuptools]
