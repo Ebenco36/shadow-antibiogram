@@ -13,7 +13,7 @@ The pipeline constructs **Shadow Antibiograms**: empirical co-testing networks t
 
 Processed, non-identifiable data are deposited at Mendeley Data:
 
-> [https://doi.org/10.17632/XXXXXXXX](#) *(DOI to be confirmed upon dataset publication)*
+> [https://doi.org/10.17632/8ffg3jb2vt.1](#) *(DOI to be confirmed upon dataset publication)*
 
 Download the `WHO_Aware_data` folder from that deposit and place it in `datasets/` before running the pipeline (see [Quick start](#quick-start)).
 
