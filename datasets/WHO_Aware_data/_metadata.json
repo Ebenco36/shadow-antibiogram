@@ -1,0 +1,8 @@
+{
+  "format": "parquet",
+  "layout": "flat",
+  "files": 1,
+  "rows": 29754,
+  "cols": 18,
+  "compression": "zstd"
+}
