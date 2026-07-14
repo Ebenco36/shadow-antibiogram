@@ -16,15 +16,13 @@ class DataConfig:
     """
     data_path: Path
 
-    # Default genera / materials as in your previous code
+    # Default to the checked-in pairwise aggregate artifact, which currently
+    # contains Escherichia coli records under PathogenGenus="Escherichia".
+    # Full six-cohort publication runs should provide an explicit config and
+    # will fail fast if any configured cohort is absent.
     genera: List[str] = field(
         default_factory=lambda: [
             "Escherichia",
-            "Staphylococcus",
-            "Klebsiella",
-            "Pseudomonas",
-            "Proteus",
-            "Streptococcus",
         ]
     )
     materials: List[str] = field(
@@ -36,6 +34,9 @@ class DataConfig:
 
     # If empty, we use all "tested" antibiotics from the DataLoader
     antibiotic_columns: List[str] = field(default_factory=list)
+
+    # Production safety: configured genera/materials must exist in the data.
+    strict_expected_cohorts: bool = True
 
 
 # ------------------------------------------------------------------ #
@@ -122,8 +123,8 @@ class VisualizationConfig:
     # is at least this threshold
     fdr_min_positive: int = 3
 
-    # Alternative hypothesis for Fisher’s test: "two-sided", "greater", or "less"
-    fdr_alternative: str = "two-sided"
+    # Alternative hypothesis for Fisher’s test: positive co-testing enrichment.
+    fdr_alternative: str = "greater"
 
 
 # ------------------------------------------------------------------ #
@@ -190,7 +191,7 @@ class ExperimentConfig:
             fdr_alpha=0.05,
             fdr_min_total=20,
             fdr_min_positive=3,
-            fdr_alternative="two-sided",
+            fdr_alternative="greater",
         )
 
         return cls(

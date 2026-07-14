@@ -28,7 +28,7 @@ class EdgeSignificancePruner:
     alpha: float = 0.05
     min_total: int = 20         # minimum number of non-missing samples to test
     min_positive: int = 3       # minimum count of co-positives to bother testing
-    alternative: str = "two-sided"  # "two-sided" | "greater" | "less"
+    alternative: str = "greater"  # positive co-testing enrichment
 
     # Filled by fit()
     pval_df: Optional[pd.DataFrame] = None

@@ -15,6 +15,7 @@ from src.controllers.similarity.Metrics import (
     PhiMetric,
     # (keep the rest imported if you want, but we'll guard them)
 )
+from src.controllers.AMR.data.pairwise_aggregate import aggregate_pairwise_counts
 
 # ----------------------------
 # Helpers
@@ -247,6 +248,15 @@ class CoTestAnalyzer:
         out = df[df["ab_1"].astype(str).isin(s) & df["ab_2"].astype(str).isin(s)].copy()
         return out
 
+    @staticmethod
+    def _aggregate_pairwise_counts(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Collapse duplicate antibiotic pairs by summing contingency counts before
+        computing association metrics. Averaging row-level similarities is not
+        equivalent to computing similarity from the pooled 2x2 table.
+        """
+        return aggregate_pairwise_counts(df)
+
     def _pairwise_metric_values(self, metric: str, df: pd.DataFrame) -> np.ndarray:
         a = df["a"].to_numpy(dtype=float)
         b = df["b"].to_numpy(dtype=float)
@@ -303,13 +313,10 @@ class CoTestAnalyzer:
         """
         self._require_pairwise(f"compute_pairwise_matrix({metric})")
 
-        df = self.transactions.copy()
-        for c in ["a", "b", "c", "d"]:
-            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
-
-        df = self._pairwise_filter_to_abx(df)
+        df = self._pairwise_filter_to_abx(self.transactions.copy())
         if df.empty:
             return pd.DataFrame()
+        df = self._aggregate_pairwise_counts(df)
 
         vals = self._pairwise_metric_values(metric, df)
 
@@ -371,13 +378,10 @@ class CoTestAnalyzer:
         """
         self._require_pairwise(f"compute_pairwise_long({metric})")
 
-        df = self.transactions.copy()
-        for c in ["a", "b", "c", "d"]:
-            df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
-
-        df = self._pairwise_filter_to_abx(df)
+        df = self._pairwise_filter_to_abx(self.transactions.copy())
         if df.empty:
             return pd.DataFrame(columns=["left", "right", "similarity", "a", "b", "c", "d"])
+        df = self._aggregate_pairwise_counts(df)
 
         sim = self._pairwise_metric_values(metric, df)
 

@@ -72,9 +72,6 @@ class DiagnosticDivergenceCohortCreator:
       - E. coli urine: ICU vs ward
       - E. coli urine: inpatient vs outpatient
       - E. coli blood: ICU vs ward
-      - Staph blood: ICU vs ward
-      - Klebsiella blood: tertiary vs primary/secondary
-      - E. coli urine: women vs men
     """
 
     def __init__(
@@ -108,17 +105,6 @@ class DiagnosticDivergenceCohortCreator:
                 description="E. coli UTIs: Hospital vs. community practice",
                 min_sample_size=1000,
             ),
-            # E. coli urine by hospital level
-            "ecoli_urine_hospital_level": ContextComparison(
-                name="ecoli_urine_hospital_level",
-                pathogen_genus="Escherichia",
-                specimen_type="Urine",
-                context_dimension="Care_Complexity",
-                context_values=("Tertiary & Specialized", "Primary/Secondary"),
-                context_labels=("Tertiary & Specialized", "Primary/Secondary"),
-                description="E. coli UTIs: Primary vs. tertiary centers",
-                min_sample_size=500,
-            ),
             # E. coli blood in ICU vs ward
             "ecoli_blood_ward_divergence": ContextComparison(
                 name="ecoli_blood_ward_divergence",
@@ -140,61 +126,6 @@ class DiagnosticDivergenceCohortCreator:
                 context_labels=("In-Patient", "Out-Patient"),
                 description="E. coli bacteremia: Hospital vs. community",
                 min_sample_size=300,
-            ),
-            # Staph aureus blood in ICU vs ward
-            "staph_blood_ward_divergence": ContextComparison(
-                name="staph_blood_ward_divergence",
-                pathogen_genus="Staphylococcus",
-                specimen_type="Blood Culture",
-                context_dimension="ARS_WardType",
-                context_values=("Intensive Care Unit", "Normal Ward"),
-                context_labels=("ICU (sepsis)", "General Ward"),
-                description="S. aureus bacteremia: ICU vs. general ward",
-                min_sample_size=300,
-            ),
-            # Klebsiella blood by hospital level
-            "klebsiella_blood_hospital_level": ContextComparison(
-                name="klebsiella_blood_hospital_level",
-                pathogen_genus="Klebsiella",
-                specimen_type="Blood Culture",
-                context_dimension="Care_Complexity",
-                context_values=("Tertiary & Specialized", "Primary/Secondary"),
-                context_labels=("Tertiary & Specialized", "Primary/Secondary"),
-                description="K. pneumoniae bacteremia: Primary vs. tertiary",
-                min_sample_size=200,
-            ),
-            # Sex-stratified comparison (E. coli UTI)
-            "ecoli_urine_sex_divergence": ContextComparison(
-                name="ecoli_urine_sex_divergence",
-                pathogen_genus="Escherichia",
-                specimen_type="Urine",
-                context_dimension="Sex",
-                context_values=("Woman", "Man"),
-                context_labels=("Female (typical)", "Male (complicated)"),
-                description="E. coli UTIs: Female vs. male patients",
-                min_sample_size=500,
-            ),
-            
-            # Organization-stratified comparison (E. coli Blood)
-            "ecoli_blood_organization_type_divergence": ContextComparison(
-                name="ecoli_blood_organization_type_divergence",
-                pathogen_genus="Escherichia",
-                specimen_type="Blood Culture",
-                context_dimension="OrgType",
-                context_values=("Hospital", "Doctor's office"),
-                context_labels=("Hospital", "Doctor's office"),
-                description="E. coli Blood Stream Infection: Hospital vs. Doctor's office",
-                min_sample_size=500,
-            ),
-            "ecoli_urine_organization_type_divergence": ContextComparison(
-                name="ecoli_urine_organization_type_divergence",
-                pathogen_genus="Escherichia",
-                specimen_type="Urine",
-                context_dimension="OrgType",
-                context_values=("Hospital", "Doctor's office"),
-                context_labels=("Hospital", "Doctor's office"),
-                description="E. coli UTIs: Hospital vs. Doctor's office",
-                min_sample_size=500,
             ),
         }
 
@@ -218,7 +149,10 @@ class DiagnosticDivergenceCohortCreator:
             pathogen_genus=[comparison.pathogen_genus],
             specimens=[comparison.specimen_type],
             isolate_group=None,
-            years=[2019, 2020, 2021, 2022, 2023],
+            # Context comparisons are aggregate-over-time comparisons.
+            # In pairwise aggregated data, context-stratified rows use Year="-";
+            # applying 2019--2023 here wrongly filters valid context rows to zero.
+            years=None,
             min_sample_size=comparison.min_sample_size,
             remove_untested_abx=True,
             description=(
@@ -238,9 +172,9 @@ class DiagnosticDivergenceCohortCreator:
             # CohortConfig.sex expects Optional[List[str]]
             cfg_kwargs["sex"] = [context_value]
         else:
-            # Fall back: don't filter on the unknown dimension, just log
-            self.logger.warning(
-                f"Unknown context_dimension '{dim}' – using no extra filter for {base_name}"
+            raise ValueError(
+                f"Unknown context_dimension '{dim}' for {base_name}. "
+                "Refusing to create an unstratified fallback cohort."
             )
 
         return CohortConfig(**cfg_kwargs)
@@ -272,10 +206,12 @@ class DiagnosticDivergenceCohortCreator:
 
                 if cohort1 is not None and cohort2 is not None:
                     self.paired_cohorts[key] = (cohort1, cohort2)
+                    n1 = cohort1.attrs.get("sample_size", len(cohort1))
+                    n2 = cohort2.attrs.get("sample_size", len(cohort2))
                     self.logger.info(
                         f"✓ {key}:\n"
-                        f"  {comparison.context_labels[0]:30s}: N={len(cohort1)}\n"
-                        f"  {comparison.context_labels[1]:30s}: N={len(cohort2)}"
+                        f"  {comparison.context_labels[0]:30s}: N={n1}\n"
+                        f"  {comparison.context_labels[1]:30s}: N={n2}"
                     )
                 else:
                     self.logger.warning(
@@ -296,6 +232,8 @@ class DiagnosticDivergenceCohortCreator:
 
         for key, (cohort1, cohort2) in self.paired_cohorts.items():
             comparison = self.comparisons[key]
+            n1 = cohort1.attrs.get("sample_size", len(cohort1))
+            n2 = cohort2.attrs.get("sample_size", len(cohort2))
 
             rows.append(
                 {
@@ -305,11 +243,13 @@ class DiagnosticDivergenceCohortCreator:
                     "context_dimension": comparison.context_dimension,
                     "context_1": comparison.context_labels[0],
                     "value_1": comparison.context_values[0],
-                    "N_1": len(cohort1),
+                    "N_1": n1,
                     "context_2": comparison.context_labels[1],
                     "value_2": comparison.context_values[1],
-                    "N_2": len(cohort2),
-                    "N_total": len(cohort1) + len(cohort2),
+                    "N_2": n2,
+                    "N_total": n1 + n2,
+                    "pairwise_rows_1": len(cohort1),
+                    "pairwise_rows_2": len(cohort2),
                 }
             )
 

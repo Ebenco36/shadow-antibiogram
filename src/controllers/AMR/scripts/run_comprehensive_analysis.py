@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 
+import hashlib
+import json
 import logging
+import platform
+import subprocess
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
-import pandas as pd  # kept in case you want to do quick ad-hoc checks
 from src.controllers.AMR.use_cases.run import run_two_key_use_cases
-from src.controllers.AMR.experiments.temporal_analysis import run_main_temporal
 from src.controllers.AMR.config.experiment_config import ExperimentConfig
 from src.controllers.AMR.experiments.grid_search_runner import GridSearchRunner
 from src.controllers.AMR.visualization.visualization_manager import VisualizationManager
+from src.controllers.AMR.data.pairwise_aggregate import (
+    is_pairwise_df,
+    parquet_files,
+    summarize_pairwise_aggregate,
+)
 
 
 def setup_logging():
@@ -69,7 +78,7 @@ def log_config_summary(config: ExperimentConfig, logger: logging.Logger):
         alpha = getattr(viz_cfg, "fdr_alpha", 0.05)
         min_total = getattr(viz_cfg, "fdr_min_total", 20)
         min_positive = getattr(viz_cfg, "fdr_min_positive", 3)
-        alternative = getattr(viz_cfg, "fdr_alternative", "two-sided")
+        alternative = getattr(viz_cfg, "fdr_alternative", "greater")
 
         logger.info("Use FDR edge pruning: %s", use_fdr)
         logger.info("  FDR alpha:          %.4f", alpha)
@@ -80,6 +89,93 @@ def log_config_summary(config: ExperimentConfig, logger: logging.Logger):
         logger.info("No explicit visualization config attached to ExperimentConfig.")
 
     logger.info("=====================================")
+
+
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _git_commit() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+    except Exception:
+        return None
+
+
+def _git_dirty() -> bool | None:
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return bool(result.stdout.strip())
+    except Exception:
+        return None
+
+
+def write_run_manifest(
+    *,
+    config: ExperimentConfig,
+    data_loader,
+    output_dir: Path,
+    status: str,
+    outputs: dict | None = None,
+) -> Path:
+    data_path = Path(config.data.data_path)
+    data_files = parquet_files(data_path)
+    data_hashes = {str(path): _sha256_file(path) for path in data_files}
+
+    data_summary = None
+    if is_pairwise_df(data_loader.df):
+        data_summary = summarize_pairwise_aggregate(data_loader.df).as_dict()
+
+    manifest = {
+        "status": status,
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "git_commit": _git_commit(),
+        "git_dirty": _git_dirty(),
+        "python": sys.version,
+        "platform": platform.platform(),
+        "config": {
+            "data_path": str(config.data.data_path),
+            "configured_genera": list(config.data.genera),
+            "configured_materials": list(config.data.materials),
+            "strict_expected_cohorts": config.data.strict_expected_cohorts,
+            "similarity_metrics": list(config.parameters.similarity_metrics),
+            "tau_range": list(config.parameters.tau_range),
+            "gamma_range": list(config.parameters.gamma_range),
+            "n_iterations": config.parameters.n_iterations,
+            "random_seed": config.random_seed,
+            "output_dir": str(config.output_dir),
+            "fdr": {
+                "use_fdr_edge_pruning": bool(getattr(config.visualization, "use_fdr_edge_pruning", False)),
+                "alpha": float(getattr(config.visualization, "fdr_alpha", 0.05)),
+                "min_total": int(getattr(config.visualization, "fdr_min_total", 20)),
+                "min_positive": int(getattr(config.visualization, "fdr_min_positive", 3)),
+                "alternative": str(getattr(config.visualization, "fdr_alternative", "greater")),
+            },
+        },
+        "data_files": data_hashes,
+        "data_summary": data_summary,
+        "outputs": outputs or {},
+    }
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = output_dir / "run_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    return manifest_path
 
 
 def main():
@@ -97,6 +193,13 @@ def main():
     # 2. Run full τ–γ–metric grid search
     logger.info("Starting grid search over tau / gamma / metric...")
     runner = GridSearchRunner(config)
+    manifest_path = write_run_manifest(
+        config=config,
+        data_loader=runner.data_loader,
+        output_dir=config.output_dir,
+        status="started",
+    )
+    logger.info("Wrote run manifest to %s", manifest_path)
     results = runner.run()
     logger.info("Grid search complete.")
 
@@ -127,6 +230,18 @@ def main():
             "Aggregated results are empty or None. Skipping aggregated_results.csv saving."
         )
 
+    manifest_path = write_run_manifest(
+        config=config,
+        data_loader=runner.data_loader,
+        output_dir=config.output_dir,
+        status="grid_search_complete",
+        outputs={
+            "single_run_results": str(single_path),
+            "aggregated_results": str(agg_path) if agg_df is not None and not agg_df.empty else None,
+        },
+    )
+    logger.info("Updated run manifest at %s", manifest_path)
+
     # 4. Generate publication-ready visualizations
     logger.info("Creating visualization dashboard (Plotly + networks)...")
     viz_manager = VisualizationManager(config, results)
@@ -139,38 +254,21 @@ def main():
     new_df = runner.data_loader.get_combined()
     run_two_key_use_cases(new_df, Path("./outputs/use_cases"))
     logger.info("++++++++++++++++++++++++ DONE RUNNING USE CASES +++++++++++++++++++++")
-    
-    # logger.info("++++++++++++++++++++++++ RUNNING TEMPORAL  ++++++++++++++++++++++++++")
-    # run_main_temporal(df=new_df, base_dir = "./outputs/temporal_analysis")
-    # logger.info("+++++++++++++++++++++ DONE RUNNING TEMPORAL  ++++++++++++++++++++++++")
 
-    ##########################################################################
-    ########### RUN THE CODE FOR CONTINUOUS PARTICIPATION USE CASE ###########
-    ##########################################################################
-    
-    # from src.controllers.AMR.use_cases.helper import filter_continuous_organisations
-    # df = new_df
-    # if "NumberOrganisation" in df.columns.to_list():
-    #     res = filter_continuous_organisations(
-    #         df,
-    #         org_col="NumberOrganisation",
-    #         year_col="Year",       # will use if present
-    #         date_col="Date",       # used only if Year missing
-    #         min_year=2019,
-    #         max_year=2023,
-    #         verbose=True,
-    #     )
+    manifest_path = write_run_manifest(
+        config=config,
+        data_loader=runner.data_loader,
+        output_dir=config.output_dir,
+        status="complete",
+        outputs={
+            "single_run_results": str(single_path),
+            "aggregated_results": str(agg_path) if agg_df is not None and not agg_df.empty else None,
+            "dashboard_dir": str(config.output_dir),
+            "use_cases_dir": "./outputs/use_cases",
+        },
+    )
+    logger.info("Final run manifest written to %s", manifest_path)
 
-    #     df_cont = res.df_continuous
-    #     orgs = res.continuous_orgs
-
-    #     print(f"Continuous organisations: {len(orgs)}")
-    #     print(f"Isolates retained: {len(df_cont):,}")
-    #     continuous_participation_percentage = len(df_cont)/len(df) * 100
-    #     print(f"Percentage of isolates retained after accounting for continuous participation: {continuous_participation_percentage:.2f}%")
-
-    #     run_two_key_use_cases(df_cont, Path("./outputs/use_cases_continuous"))
-        # run_main_temporal(df=df_cont, base_dir="./outputs/temporal_analysis_for_continuous")
 
 if __name__ == "__main__":
     main()

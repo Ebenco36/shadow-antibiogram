@@ -88,7 +88,8 @@ class ProductionCohortGenerator:
         self._load_configurations(config_path)
         self.is_pairwise = all(c in self.df.columns for c in ["ab_1","ab_2","a","b","c","d"])
 
-        logger.info(f"CohortGenerator initialized with {len(self.df)} isolates")
+        unit = "pairwise aggregate rows" if self.is_pairwise else "isolates"
+        logger.info(f"CohortGenerator initialized with {len(self.df)} {unit}")
     
     def _validate_data(self) -> None:
         if self.df.empty:
@@ -288,6 +289,7 @@ class ProductionCohortGenerator:
             # if len(cohort_df) < config.min_sample_size:
             #     logger.warning(f"Cohort '{config.name}' too small: {len(cohort_df)} < {config.min_sample_size}")
             #     return None
+            cohort_n = len(cohort_df)
             if self.is_pairwise:
                 # cohort size = total isolates in that stratum (should be constant across pairs)
                 N_candidates = (cohort_df["a"] + cohort_df["b"] + cohort_df["c"] + cohort_df["d"]).unique()
@@ -296,6 +298,7 @@ class ProductionCohortGenerator:
                 if N < config.min_sample_size:
                     logger.warning(f"Cohort '{config.name}' too small: N={N} < {config.min_sample_size}")
                     return None
+                cohort_n = N
             else:
                 if len(cohort_df) < config.min_sample_size:
                     logger.warning(f"Cohort '{config.name}' too small: {len(cohort_df)} < {config.min_sample_size}")
@@ -308,7 +311,7 @@ class ProductionCohortGenerator:
             # Add metadata
             cohort_df.attrs.update({
                 'cohort_name': config.name,
-                'sample_size': len(cohort_df),
+                'sample_size': cohort_n,
                 'description': config.description,
                 'config': config.__dict__,
                 'created_at': pd.Timestamp.now()
@@ -318,7 +321,13 @@ class ProductionCohortGenerator:
             self.cohorts[config.name] = cohort_df
             self._update_cohort_metadata(config.name, cohort_df)
             
-            logger.info(f"✓ Successfully created cohort '{config.name}' with {len(cohort_df)} isolates")
+            if self.is_pairwise:
+                logger.info(
+                    f"✓ Successfully created cohort '{config.name}' with "
+                    f"N={cohort_n:,} isolates represented by {len(cohort_df):,} pairwise rows"
+                )
+            else:
+                logger.info(f"✓ Successfully created cohort '{config.name}' with {len(cohort_df)} isolates")
             if 'Year' in cohort_df.columns:
                 logger.info(f"[{config.name}] Final unique years: {cohort_df['Year'].unique()}")
 
@@ -337,7 +346,10 @@ class ProductionCohortGenerator:
                 mask &= self.df['Care_Complexity'].isin(valid_complexities)
                 logger.debug(f"Filtered by Care_Complexity: {valid_complexities}")
             else:
-                logger.warning(f"No valid care complexities found in: {complexity_values}. Available: {self.available_care_complexity}")
+                raise ValueError(
+                    f"No valid care complexities found in: {complexity_values}. "
+                    f"Available: {self.available_care_complexity}"
+                )
         
         return mask
     
@@ -350,7 +362,10 @@ class ProductionCohortGenerator:
                 mask &= self.df['ARS_HospitalLevelManual'].isin(valid_levels)
                 logger.debug(f"Filtered by Hospital Level: {valid_levels}")
             else:
-                logger.warning(f"No valid hospital levels found in: {hospital_level_values}. Available: {self.available_hospital_level}")
+                raise ValueError(
+                    f"No valid hospital levels found in: {hospital_level_values}. "
+                    f"Available: {self.available_hospital_level}"
+                )
         
         return mask
     
@@ -449,7 +464,7 @@ class ProductionCohortGenerator:
                 mask &= self.df['Sex'].isin(valid_sex)
                 logger.debug(f"Filtered by Sex: {valid_sex}")
             else:
-                logger.warning(f"No valid Sex found in: {sex_values}. Available: {self.available_sex}")
+                raise ValueError(f"No valid Sex found in: {sex_values}. Available: {self.available_sex}")
         
         return mask
     
@@ -463,12 +478,20 @@ class ProductionCohortGenerator:
                 mask &= self.df['CareType'] == mapped_care_type
                 logger.debug(f"Filtered by CareType: {mapped_care_type}")
             else:
-                logger.warning(f"Care type '{config.care_type}' (mapped to '{mapped_care_type}') not found. Available: {self.available_care_types}")
+                raise ValueError(
+                    f"Care type '{config.care_type}' (mapped to '{mapped_care_type}') not found. "
+                    f"Available: {self.available_care_types}"
+                )
         
-        if config.ward_type and config.ward_type in self.available_ward_types:
+        if config.ward_type:
             ward_values = config.ward_type if isinstance(config.ward_type, list) else [config.ward_type]
-            mask &= self.df['ARS_WardType'].isin(ward_values) if isinstance(ward_values, list) else (self.df['ARS_WardType'] == ward_values)
-            logger.debug(f"Filtered by WardType: {ward_values}")
+            valid_ward = [w for w in ward_values if w in self.available_ward_types]
+            if not valid_ward:
+                raise ValueError(
+                    f"Ward type '{config.ward_type}' not found. Available: {self.available_ward_types}"
+                )
+            mask &= self.df['ARS_WardType'].isin(valid_ward)
+            logger.debug(f"Filtered by WardType: {valid_ward}")
 
         # if config.age_groups:
         #     age_group_values = config.age_groups if isinstance(config.age_groups, list) else [config.age_groups]

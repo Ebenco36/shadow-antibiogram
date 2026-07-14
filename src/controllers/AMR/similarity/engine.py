@@ -98,6 +98,25 @@ class SimilarityEngine:
     # Compute helpers
     # ------------------------------------------------------------
 
+    def _pairwise_analyzer_for_strata(self, strata: Optional[dict]):
+        work = self.df
+        if strata:
+            mask = pd.Series(True, index=work.index)
+            for col, value in strata.items():
+                if col not in work.columns:
+                    raise ValueError(f"Stratification column not found: {col}")
+                values = value if isinstance(value, (list, tuple, set)) else [value]
+                mask &= work[col].isin(values)
+            work = work.loc[mask].copy()
+            if work.empty:
+                raise ValueError(f"No pairwise rows remain after applying strata: {strata}")
+
+        if work is self.df:
+            return self._analyzer
+
+        from src.controllers.CoTestAnalyzerAggregated import CoTestAnalyzer as CoTestAnalyzerAggregated
+        return CoTestAnalyzerAggregated(work, self.antibiotic_columns)
+
     def compute_all(self, *, strata: Optional[dict] = None) -> Dict[str, pd.DataFrame]:
         """
         Compute all supported similarity matrices.
@@ -113,23 +132,15 @@ class SimilarityEngine:
         Dict[str, pd.DataFrame]
         """
         if self.is_pairwise:
-            # aggregated analyzer: method names in your class are:
-            # jaccard(), dice(), cos(), overlap()
-            # phi only if you add it there.
-            out = {
-                "jaccard": self._analyzer.compute_matrix("jaccard", strata=strata),
-                "dice": self._analyzer.compute_matrix("dice", strata=strata),
-                "cosine": self._analyzer.compute_matrix("cosine", strata=strata),
-                "overlap": self._analyzer.compute_matrix("overlap", strata=strata),
+            analyzer = self._pairwise_analyzer_for_strata(strata)
+
+            return {
+                "jaccard": analyzer.jaccard(),
+                "dice": analyzer.dice(),
+                "cosine": analyzer.cos(),
+                "overlap": analyzer.overlap(),
+                "phi": analyzer.phi(),
             }
-
-            # phi is optional depending on your aggregated analyzer implementation
-            try:
-                out["phi"] = self._analyzer.compute_matrix("phi", strata=strata)
-            except Exception:
-                pass
-
-            return out
 
         # WIDE mode (existing behavior)
         return {
@@ -162,14 +173,17 @@ class SimilarityEngine:
         """
         name = metric_name.strip().lower()
 
-        # WIDE mode (existing behavior)
+        analyzer = self._pairwise_analyzer_for_strata(strata) if self.is_pairwise else self._analyzer
+
         if name == "jaccard":
-            return self._analyzer.jaccard()
+            return analyzer.jaccard()
         if name == "dice":
-            return self._analyzer.dice()
+            return analyzer.dice()
         if name in {"cosine", "cos"}:
-            return self._analyzer.cos()
+            return analyzer.cos()
+        if name == "overlap" and self.is_pairwise:
+            return analyzer.overlap()
         if name == "phi":
-            return self._analyzer.phi()
+            return analyzer.phi()
 
         raise ValueError(f"Unsupported similarity metric: {metric_name}")

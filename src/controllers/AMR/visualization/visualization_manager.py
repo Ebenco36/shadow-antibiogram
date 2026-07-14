@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
 import json
+import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +15,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 import plotly.io as pio
+from scipy.stats import fisher_exact
 
 from src.controllers.AMR.config.experiment_config import ExperimentConfig
 from src.controllers.AMR.experiments.results import ResultCollection
@@ -28,6 +30,10 @@ from src.utils.network import (
 )
 from src.utils.helpers import get_label
 from src.controllers.AMR.statistics.edge_significance import EdgeSignificancePruner
+from src.controllers.AMR.data.pairwise_aggregate import (
+    aggregate_pairwise_counts,
+    select_material_level_rows,
+)
 
 import warnings
 
@@ -83,7 +89,128 @@ class VisualizationManager:
         self.fdr_min_positive: int = int(
             getattr(viz_cfg, "fdr_min_positive", 3))
         self.fdr_alternative: str = str(
-            getattr(viz_cfg, "fdr_alternative", "two-sided"))
+            getattr(viz_cfg, "fdr_alternative", "greater"))
+
+    @staticmethod
+    def _safe_write_image(fig: go.Figure, output_path: Path, **kwargs) -> None:
+        """Write static Plotly images when Kaleido is available; keep the pipeline running otherwise."""
+        try:
+            fig.write_image(str(output_path), **kwargs)
+        except Exception as exc:
+            logging.getLogger(__name__).warning(
+                "Skipping static Plotly export for %s because Kaleido failed: %s",
+                output_path,
+                exc,
+            )
+
+    @staticmethod
+    def _is_pairwise_df(df: pd.DataFrame) -> bool:
+        return {"ab_1", "ab_2", "a", "b", "c", "d"}.issubset(set(df.columns))
+
+    @staticmethod
+    def _pairwise_abx_labels(df: pd.DataFrame) -> List[str]:
+        s1 = set(df["ab_1"].astype("string").dropna().astype(str).unique())
+        s2 = set(df["ab_2"].astype("string").dropna().astype(str).unique())
+        return sorted(s1.union(s2))
+
+    @staticmethod
+    def _pairwise_material_level_rows(df: pd.DataFrame) -> pd.DataFrame:
+        return select_material_level_rows(df)
+
+    @staticmethod
+    def _aggregate_pairwise_counts(df: pd.DataFrame) -> pd.DataFrame:
+        return aggregate_pairwise_counts(df)
+
+    @staticmethod
+    def _safe_div(num: np.ndarray, den: np.ndarray) -> np.ndarray:
+        num = np.asarray(num, dtype=float)
+        den = np.asarray(den, dtype=float)
+        out = np.zeros_like(num, dtype=float)
+        mask = den > 0
+        out[mask] = num[mask] / den[mask]
+        return out
+
+    @classmethod
+    def _pairwise_metric_values(cls, df: pd.DataFrame, metric: str) -> np.ndarray:
+        a = df["a"].to_numpy(dtype=float)
+        b = df["b"].to_numpy(dtype=float)
+        c = df["c"].to_numpy(dtype=float)
+        d = df["d"].to_numpy(dtype=float)
+        name = metric.lower()
+        if name in {"jaccard", "jac"}:
+            return cls._safe_div(a, a + b + c)
+        if name in {"dice", "sorensen"}:
+            return cls._safe_div(2 * a, 2 * a + b + c)
+        if name in {"cosine", "cos"}:
+            return cls._safe_div(a, np.sqrt((a + b) * (a + c)))
+        if name in {"overlap", "ovl"}:
+            return cls._safe_div(a, np.minimum(a + b, a + c))
+        if name == "phi":
+            return cls._safe_div((a * d) - (b * c), np.sqrt((a + b) * (c + d) * (a + c) * (b + d)))
+        raise ValueError(f"Unsupported pairwise metric: {metric}")
+
+    @staticmethod
+    def _bh_fdr(pvals: np.ndarray) -> np.ndarray:
+        p = np.asarray(pvals, dtype=float)
+        if p.size == 0:
+            return p
+        order = np.argsort(p)
+        ranked = p[order]
+        q = ranked * p.size / np.arange(1, p.size + 1)
+        q = np.minimum.accumulate(q[::-1])[::-1]
+        out = np.empty_like(q)
+        out[order] = np.clip(q, 0.0, 1.0)
+        return out
+
+    def _pairwise_edge_statistics(
+        self,
+        df_pairwise: pd.DataFrame,
+        metric: str,
+        tau: float,
+    ) -> pd.DataFrame:
+        """Fisher + BH-FDR edge table for aggregate pairwise a/b/c/d data."""
+        work = self._aggregate_pairwise_counts(df_pairwise)
+
+        work["similarity"] = self._pairwise_metric_values(work, metric)
+        work["total"] = work["a"] + work["b"] + work["c"] + work["d"]
+        work["testable"] = (
+            (work["similarity"] >= float(tau))
+            & (work["total"] >= int(self.fdr_min_total))
+            & (work["a"] >= int(self.fdr_min_positive))
+        )
+
+        pvals = np.full(len(work), np.nan, dtype=float)
+        test_idx = np.where(work["testable"].to_numpy())[0]
+        for pos in test_idx:
+            row = work.iloc[pos]
+            _, pval = fisher_exact(
+                [[int(row.a), int(row.b)], [int(row.c), int(row.d)]],
+                alternative=self.fdr_alternative,
+            )
+            pvals[pos] = pval
+
+        qvals = np.full(len(work), np.nan, dtype=float)
+        if len(test_idx) > 0:
+            qvals[test_idx] = self._bh_fdr(pvals[test_idx])
+
+        out = pd.DataFrame(
+            {
+                "antibiotic_i": work["ab_1"].astype(str).to_numpy(),
+                "antibiotic_j": work["ab_2"].astype(str).to_numpy(),
+                "similarity": work["similarity"].to_numpy(dtype=float),
+                "a": work["a"].to_numpy(dtype=int),
+                "b": work["b"].to_numpy(dtype=int),
+                "c": work["c"].to_numpy(dtype=int),
+                "d": work["d"].to_numpy(dtype=int),
+                "total": work["total"].to_numpy(dtype=int),
+                "testable": work["testable"].to_numpy(dtype=bool),
+                "p_value": pvals,
+                "q_value": qvals,
+            }
+        )
+        out["significant"] = out["testable"] & (out["q_value"] <= self.fdr_alpha)
+        return out
+
     # ------------------------------------------------------------------ #
     # Style
     # ------------------------------------------------------------------ #
@@ -480,11 +607,11 @@ class VisualizationManager:
 
             # Save PNG (high resolution)
             out_png = out_html.with_suffix(".png")
-            fig.write_image(str(out_png), format="png", scale=4)
+            self._safe_write_image(fig, out_png, format="png", scale=4)
 
             # Save PDF (vector)
             out_pdf = out_html.with_suffix(".pdf")
-            fig.write_image(str(out_pdf), format="pdf")
+            self._safe_write_image(fig, out_pdf, format="pdf")
 
     # ------------------------------------------------------------------ #
     # 2) Overall metric comparison & global best params – Plotly
@@ -560,10 +687,10 @@ class VisualizationManager:
                        include_plotlyjs="cdn", full_html=True)
 
         out_png = output_path.with_suffix(".png")
-        fig.write_image(str(out_png), format="png", scale=4)
+        self._safe_write_image(fig, out_png, format="png", scale=4)
 
         out_pdf = output_path.with_suffix(".pdf")
-        fig.write_image(str(out_pdf), format="pdf")
+        self._safe_write_image(fig, out_pdf, format="pdf")
 
     # ------------------------------------------------------------------ #
     # 3) Stability analysis plot – Plotly
@@ -648,10 +775,10 @@ class VisualizationManager:
                        include_plotlyjs="cdn", full_html=True)
 
         out_png = output_path.with_suffix(".png")
-        fig.write_image(str(out_png), format="png", scale=4)
+        self._safe_write_image(fig, out_png, format="png", scale=4)
 
         out_pdf = output_path.with_suffix(".pdf")
-        fig.write_image(str(out_pdf), format="pdf")
+        self._safe_write_image(fig, out_pdf, format="pdf")
 
     # ------------------------------------------------------------------ #
     # 4) Trade-off plot for top configurations – Plotly
@@ -754,10 +881,10 @@ class VisualizationManager:
                        include_plotlyjs="cdn", full_html=True)
 
         out_png = output_path.with_suffix(".png")
-        fig.write_image(str(out_png), format="png", scale=4)
+        self._safe_write_image(fig, out_png, format="png", scale=4)
 
         out_pdf = output_path.with_suffix(".pdf")
-        fig.write_image(str(out_pdf), format="pdf")
+        self._safe_write_image(fig, out_pdf, format="pdf")
 
     # ------------------------------------------------------------------ #
     # 5) ICS & Stability vs τ – Plotly, complementary colours
@@ -887,10 +1014,10 @@ class VisualizationManager:
                            include_plotlyjs="cdn", full_html=True)
 
             out_png = output_dir / f"ics_stability_{safe_genus}_{safe_mat}.png"
-            fig.write_image(str(out_png), format="png", scale=4)
+            self._safe_write_image(fig, out_png, format="png", scale=4)
 
             out_pdf = output_dir / f"ics_stability_{safe_genus}_{safe_mat}.pdf"
-            fig.write_image(str(out_pdf), format="pdf")
+            self._safe_write_image(fig, out_pdf, format="pdf")
 
     # ------------------------------------------------------------------ #
     # 6) External & hierarchical scores vs τ – Plotly
@@ -1016,11 +1143,11 @@ class VisualizationManager:
 
             out_png = output_dir / \
                 f"external_scores_{safe_genus}_{safe_mat}.png"
-            fig.write_image(str(out_png), format="png", scale=4)
+            self._safe_write_image(fig, out_png, format="png", scale=4)
 
             out_pdf = output_dir / \
                 f"external_scores_{safe_genus}_{safe_mat}.pdf"
-            fig.write_image(str(out_pdf), format="pdf")
+            self._safe_write_image(fig, out_pdf, format="pdf")
 
     # ------------------------------------------------------------------ #
     # 7) Cluster composition CSV for best configs
@@ -1160,6 +1287,20 @@ class VisualizationManager:
         df_subset = df_raw.loc[mask].copy()
         if df_subset.empty:
             return None, []
+
+        if self._is_pairwise_df(df_subset):
+            df_subset = self._pairwise_material_level_rows(df_subset)
+            if df_subset.empty:
+                return None, []
+            all_abx_values = self._pairwise_abx_labels(df_subset)
+            if antibiotic_cols_from_config:
+                wanted = set(map(str, antibiotic_cols_from_config))
+                antibiotic_columns = [a for a in all_abx_values if a in wanted]
+            else:
+                antibiotic_columns = all_abx_values
+            if not antibiotic_columns:
+                return None, []
+            return df_subset, antibiotic_columns
 
         # Decide antibiotic columns (same logic as GridSearchRunner)
         if antibiotic_cols_from_config:
@@ -1450,19 +1591,6 @@ class VisualizationManager:
             if df_subset is None or not abx_cols:
                 continue
 
-            # --- FDR (on binary table) ---
-            pruner = (
-                EdgeSignificancePruner(
-                    df_binary=df_subset[abx_cols],
-                    antibiotic_cols=abx_cols,
-                    alpha=self.fdr_alpha,
-                    min_total=self.fdr_min_total,
-                    min_positive=self.fdr_min_positive,
-                    alternative=self.fdr_alternative,
-                )
-                .fit()
-            )
-
             safe_genus = (genus or "ALL").replace(" ", "_")
             safe_mat = (material or "ALL").replace(" ", "_")
             safe_metric = metric.replace(" ", "_")
@@ -1471,10 +1599,10 @@ class VisualizationManager:
                 networks_dir
                 / f"edge_stats_{safe_genus}_{safe_mat}_{safe_metric}.csv"
             )
-            pruner.save_edge_statistics(
-                filepath=stats_path,
-                upper_only=True,
-                extra_columns={
+
+            if self._is_pairwise_df(df_subset):
+                stats_df = self._pairwise_edge_statistics(df_subset, metric, tau)
+                for key, value in {
                     "genus": genus,
                     "material": material,
                     "metric": metric,
@@ -1484,10 +1612,43 @@ class VisualizationManager:
                     "min_total": self.fdr_min_total,
                     "min_positive": self.fdr_min_positive,
                     "alternative": self.fdr_alternative,
-                },
-            )
+                }.items():
+                    stats_df[key] = value
+                stats_df.to_csv(stats_path, index=False)
+                allowed_pairs = [
+                    (row.antibiotic_i, row.antibiotic_j)
+                    for row in stats_df.loc[stats_df["significant"]].itertuples(index=False)
+                ]
+            else:
+                # --- FDR (on binary table) ---
+                pruner = (
+                    EdgeSignificancePruner(
+                        df_binary=df_subset[abx_cols],
+                        antibiotic_cols=abx_cols,
+                        alpha=self.fdr_alpha,
+                        min_total=self.fdr_min_total,
+                        min_positive=self.fdr_min_positive,
+                        alternative=self.fdr_alternative,
+                    )
+                    .fit()
+                )
 
-            allowed_pairs = pruner.get_significant_pairs()  # Set[(u, v)]
+                pruner.save_edge_statistics(
+                    filepath=stats_path,
+                    upper_only=True,
+                    extra_columns={
+                        "genus": genus,
+                        "material": material,
+                        "metric": metric,
+                        "tau": tau,
+                        "gamma": gamma,
+                        "alpha": self.fdr_alpha,
+                        "min_total": self.fdr_min_total,
+                        "min_positive": self.fdr_min_positive,
+                        "alternative": self.fdr_alternative,
+                    },
+                )
+                allowed_pairs = pruner.get_significant_pairs()
 
             # --- Similarity matrix ---
             sim_engine = SimilarityEngine(df_subset, abx_cols)
@@ -1630,39 +1791,36 @@ class VisualizationManager:
             if df_subset is None or not abx_cols:
                 continue
 
-            # --- FDR on binary table ---
-            pruner = (
-                EdgeSignificancePruner(
-                    df_binary=df_subset[abx_cols],
-                    antibiotic_cols=abx_cols,
-                    alpha=self.fdr_alpha,
-                    min_total=self.fdr_min_total,
-                    min_positive=self.fdr_min_positive,
-                    alternative=self.fdr_alternative,
-                )
-                .fit()
-            )
-
-            # Assume pruner exposes a DataFrame of results, e.g.:
-            #   pruner.results_df with columns:
-            #   ['abx_i', 'abx_j', 'p_value', 'q_value', 'is_significant']
-            if not hasattr(pruner, "results_df") or pruner.results_df is None:
-                continue
-
-            stats_df = pruner.results_df.copy()
-
             # --- Similarity matrix for reference ---
             sim_engine = SimilarityEngine(df_subset, abx_cols)
             similarity_matrix = sim_engine.compute(metric)
 
-            def get_sim(row_edge):
-                i = row_edge["abx_i"]
-                j = row_edge["abx_j"]
-                if i in similarity_matrix.index and j in similarity_matrix.columns:
-                    return float(similarity_matrix.loc[i, j])
-                return np.nan
+            if self._is_pairwise_df(df_subset):
+                stats_df = self._pairwise_edge_statistics(df_subset, metric, tau)
+            else:
+                pruner = (
+                    EdgeSignificancePruner(
+                        df_binary=df_subset[abx_cols],
+                        antibiotic_cols=abx_cols,
+                        alpha=self.fdr_alpha,
+                        min_total=self.fdr_min_total,
+                        min_positive=self.fdr_min_positive,
+                        alternative=self.fdr_alternative,
+                    )
+                    .fit()
+                )
+                stats_df = pruner.to_long_dataframe(upper_only=True).rename(
+                    columns={"significant": "is_significant"}
+                )
 
-            stats_df["similarity"] = stats_df.apply(get_sim, axis=1)
+                def get_sim(row_edge):
+                    i = row_edge["antibiotic_i"]
+                    j = row_edge["antibiotic_j"]
+                    if i in similarity_matrix.index and j in similarity_matrix.columns:
+                        return float(similarity_matrix.loc[i, j])
+                    return np.nan
+
+                stats_df["similarity"] = stats_df.apply(get_sim, axis=1)
 
             # Add context columns
             stats_df["genus"] = genus
@@ -1678,9 +1836,10 @@ class VisualizationManager:
             # Order columns nicely
             cols = [
                 "genus", "material", "metric", "tau", "gamma",
-                "abx_i", "abx_j",
+                "antibiotic_i", "antibiotic_j",
                 "similarity",
-                "p_value", "q_value", "is_significant",
+                "p_value", "q_value", "significant", "is_significant",
+                "testable", "a", "b", "c", "d", "total",
             ]
             cols = [c for c in cols if c in out_df.columns]
             out_df = out_df[cols]
@@ -1776,50 +1935,56 @@ class VisualizationManager:
             sim_engine = SimilarityEngine(df_subset, abx_cols)
             sim = sim_engine.compute(metric)
 
-            # --- Build binary testing matrix for FDR (0/1) ---
-            df_binary = (
-                df_subset[abx_cols]
-                .apply(pd.to_numeric, errors="coerce")
-                .fillna(0)
-                .astype(int)
-            )
+            if self._is_pairwise_df(df_subset):
+                stats_df = self._pairwise_edge_statistics(df_subset, metric, tau)
+                n_edges_jaccard = int((stats_df["similarity"] >= tau).sum())
+                n_edges_testable = int(stats_df["testable"].sum())
+                n_edges_signif = int(stats_df["significant"].sum())
+            else:
+                # --- Build binary testing matrix for FDR (0/1) ---
+                df_binary = (
+                    df_subset[abx_cols]
+                    .apply(pd.to_numeric, errors="coerce")
+                    .fillna(0)
+                    .astype(int)
+                )
 
-            # --- Fit pruner & get q-values ---
-            pruner = EdgeSignificancePruner(
-                df_binary=df_binary,
-                antibiotic_cols=abx_cols,
-                alpha=self.fdr_alpha,
-                min_total=self.fdr_min_total,
-                min_positive=self.fdr_min_positive,
-                alternative=self.fdr_alternative,
-            ).fit()
+                # --- Fit pruner & get q-values ---
+                pruner = EdgeSignificancePruner(
+                    df_binary=df_binary,
+                    antibiotic_cols=abx_cols,
+                    alpha=self.fdr_alpha,
+                    min_total=self.fdr_min_total,
+                    min_positive=self.fdr_min_positive,
+                    alternative=self.fdr_alternative,
+                ).fit()
 
-            qvals = pruner.qval_df.reindex(
-                index=sim.index, columns=sim.columns)
-            qvals_np = qvals.to_numpy()
+                qvals = pruner.qval_df.reindex(
+                    index=sim.index, columns=sim.columns)
+                qvals_np = qvals.to_numpy()
 
-            # --- Define mask: edges with sim >= tau (undirected, off-diagonal only) ---
-            sim_np = sim.to_numpy()
-            n = sim_np.shape[0]
+                # --- Define mask: edges with sim >= tau (undirected, off-diagonal only) ---
+                sim_np = sim.to_numpy()
+                n = sim_np.shape[0]
 
-            sim_mask = (sim_np >= tau)
-            np.fill_diagonal(sim_mask, False)
+                sim_mask = (sim_np >= tau)
+                np.fill_diagonal(sim_mask, False)
 
-            # "testable" = q-value is finite / not NaN
-            testable_mask = np.isfinite(qvals_np) & ~np.isnan(qvals_np)
-            np.fill_diagonal(testable_mask, False)
+                # "testable" = q-value is finite / not NaN
+                testable_mask = np.isfinite(qvals_np) & ~np.isnan(qvals_np)
+                np.fill_diagonal(testable_mask, False)
 
-            # Edges considered in retention denominator:
-            denom_mask = sim_mask & testable_mask
+                # Edges considered in retention denominator:
+                denom_mask = sim_mask & testable_mask
 
-            # Edges retained (significant) in numerator:
-            signif_mask = denom_mask & (qvals_np <= self.fdr_alpha)
+                # Edges retained (significant) in numerator:
+                signif_mask = denom_mask & (qvals_np <= self.fdr_alpha)
 
-            # Convert to undirected counts: use upper triangle only
-            triu_idx = np.triu_indices(n, k=1)
-            n_edges_jaccard = int(sim_mask[triu_idx].sum())
-            n_edges_testable = int(denom_mask[triu_idx].sum())
-            n_edges_signif = int(signif_mask[triu_idx].sum())
+                # Convert to undirected counts: use upper triangle only
+                triu_idx = np.triu_indices(n, k=1)
+                n_edges_jaccard = int(sim_mask[triu_idx].sum())
+                n_edges_testable = int(denom_mask[triu_idx].sum())
+                n_edges_signif = int(signif_mask[triu_idx].sum())
 
             retention = (
                 float(n_edges_signif) / float(n_edges_testable)
@@ -1990,7 +2155,7 @@ class VisualizationManager:
 
         pio.write_html(fig, file=str(out_html),
                        include_plotlyjs="cdn", full_html=True)
-        fig.write_image(str(out_png), format="png", scale=4)
-        fig.write_image(str(out_pdf), format="pdf")
+        self._safe_write_image(fig, out_png, format="png", scale=4)
+        self._safe_write_image(fig, out_pdf, format="pdf")
 
         print(f"[Retention] Saved improved retention figure → {out_png}")

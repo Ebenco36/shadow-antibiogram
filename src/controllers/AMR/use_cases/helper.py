@@ -396,6 +396,7 @@ from src.controllers.AMR.use_cases.config_similarity import (
     BEST_TAU,
     BEST_GAMMA,
 )
+from src.controllers.AMR.data.pairwise_aggregate import aggregate_pairwise_counts
 
 # ============================================================
 # Dataclasses
@@ -581,24 +582,32 @@ def _bh_fdr(pvals: np.ndarray) -> np.ndarray:
     out[order] = q
     return out
 
+def _aggregate_pairwise_counts(df: pd.DataFrame) -> pd.DataFrame:
+    return aggregate_pairwise_counts(df)
+
 def pairwise_fdr_significant_pairs(
     df_pairwise: pd.DataFrame,
     *,
     tau_gate: float = 0.30,
     alpha: float = 0.05,
     alternative: str = "greater",
+    min_total: int = 20,
+    min_positive: int = 3,
     metric_for_gate: str = "jaccard",
 ) -> Set[Tuple[str, str]]:
     """
     For PAIRWISE data, compute Fisher+BH-FDR over all pairs passing similarity >= tau_gate.
     Returns a set of significant undirected pairs (u,v) with u< v lexicographically.
     """
-    work = df_pairwise.copy()
-    for c in ["a", "b", "c", "d"]:
-        work[c] = pd.to_numeric(work[c], errors="coerce").fillna(0).astype(int)
+    work = _aggregate_pairwise_counts(df_pairwise)
 
     sim = _pairwise_metric_values(work, metric_for_gate)
-    gate = sim >= float(tau_gate)
+    total = work["a"] + work["b"] + work["c"] + work["d"]
+    gate = (
+        (sim >= float(tau_gate))
+        & (total >= int(min_total))
+        & (work["a"] >= int(min_positive))
+    )
     work = work.loc[gate].copy()
     if work.empty:
         return set()
@@ -640,7 +649,7 @@ def build_and_save_network_for_cohort(
     fdr_alpha: float = 0.05,
     fdr_min_total: int = 20,
     fdr_min_positive: int = 3,
-    fdr_alternative: str = "two-sided",
+    fdr_alternative: str = "greater",
     suffix: Optional[str] = None,
     n_louvain_iterations: int = 100,
     base_seed: int = 100,
@@ -676,9 +685,7 @@ def build_and_save_network_for_cohort(
 
     else:
         # PAIRWISE mode: compute directly from a,b,c,d
-        work = cohort_df.copy()
-        for c in ["a", "b", "c", "d"]:
-            work[c] = pd.to_numeric(work[c], errors="coerce").fillna(0).astype(int)
+        work = _aggregate_pairwise_counts(cohort_df)
 
         sim_vals = _pairwise_metric_values(work, metric)
         similarity_matrix = _pairwise_square_matrix(work, sim_vals, fill_diagonal=1.0)
@@ -717,7 +724,9 @@ def build_and_save_network_for_cohort(
                 cohort_df,
                 tau_gate=tau,
                 alpha=fdr_alpha,
-                alternative=("greater" if fdr_alternative == "two-sided" else fdr_alternative),
+                alternative=fdr_alternative,
+                min_total=fdr_min_total,
+                min_positive=fdr_min_positive,
                 metric_for_gate=metric,
             )
 
@@ -858,7 +867,7 @@ def save_raw_and_pruned_networks(
     fdr_alpha: float = 0.05,
     fdr_min_total: int = 20,
     fdr_min_positive: int = 3,
-    fdr_alternative: str = "two-sided",
+    fdr_alternative: str = "greater",
     n_louvain_iterations: int = 100,
     base_seed: int = 100,
     title_prefix: Optional[str] = None,

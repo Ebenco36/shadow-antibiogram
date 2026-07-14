@@ -225,6 +225,7 @@ ARSMonthlyAggregator.py
 # dataset_sample.py
 # scripts/
 benchmarks_escherichia_full_vs_agg/
+benchmarks_escherichia_full_vs_agg__/
 network_compare_pub/
 sim_for_viz2.csv
 
@@ -234,3 +235,20 @@ run_contingency.py
 dataset_sample.py
 df_aggregated_head.csv
 benchmarks_escherichia_full_vs_agg-manuscript/
+paper/
+
+# Local presentation/review artifacts
+.claude/
+poster/
+AwotoroEbenezer_RKI_Poster_edit*.pptx
+completeData_part5_head.csv
+
+# Ad-hoc local helper scripts generated during manuscript/poster preparation
+scripts/convert_pdfs_to_png.py
+scripts/convert_pdfs_to_svg.py
+scripts/create_poster_v3.py
+scripts/create_shadow_antibiogram_poster.py
+scripts/create_shadow_antibiogram_poster_two_column.py
+scripts/generate_diff.py
+scripts/generate_shared_local_diff.py
+scripts/pathogen_cohort_composition.py

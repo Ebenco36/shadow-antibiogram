@@ -155,7 +155,7 @@ class FDRMixin:
         *,
         alpha: float = 0.05,
         fdr: Literal["bh", "by"] = "bh",
-        test: Literal["g", "fisher", "hypergeom"] = "g",
+        test: Literal["g", "fisher", "hypergeom"] = "fisher",
         tail: Literal["greater", "less", "two-sided"] = "greater",
         min_weight: float = 0.0,                 # similarity floor to keep
         mode: Literal["hard", "soft"] = "hard",  # prune vs. shrink

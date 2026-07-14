@@ -2090,8 +2090,12 @@ class TemporalTrendAnalyzer:
                     series, model=model, period=period, extrapolate_trend="freq"
                 )
                 return decomposition.trend, decomposition.seasonal, decomposition.resid
-            except (ValueError, TypeError, Exception):
-                pass  # Fall through to simple decomposition
+            except (ValueError, TypeError) as exc:
+                warnings.warn(
+                    f"statsmodels seasonal_decompose failed ({exc!r}); "
+                    "falling back to simple rolling decomposition.",
+                    RuntimeWarning,
+                )
         
         # Simple rolling decomposition
         trend = series.rolling(

@@ -129,10 +129,21 @@ class TemporalCohortCreator:
                     context.specimens
                 )
 
-                sample_size = int((year_mask & genus_mask & specimen_mask).sum())
+                sample_mask = year_mask & genus_mask & specimen_mask
+                if getattr(self.generator, "is_pairwise", False):
+                    candidate = self.generator.df.loc[sample_mask, ["a", "b", "c", "d"]]
+                    if candidate.empty:
+                        sample_size = 0
+                    else:
+                        sample_size = int((candidate["a"] + candidate["b"] + candidate["c"] + candidate["d"]).max())
+                    pairwise_rows = int(sample_mask.sum())
+                else:
+                    sample_size = int(sample_mask.sum())
+                    pairwise_rows = 0
                 self.logger.info(
-                    f"DEBUG 2021: specimen_key={specimen_key} specimens={context.specimens} "
-                    f"genus={self.pathogen_genus} sample_size={sample_size} min_required={context.min_sample_size}"
+                    f"Pre-check: year={year} specimen_key={specimen_key} specimens={context.specimens} "
+                    f"genus={self.pathogen_genus} sample_size={sample_size} "
+                    f"pairwise_rows={pairwise_rows} min_required={context.min_sample_size}"
                 )
                 if sample_size < context.min_sample_size:
                     self.logger.info(
@@ -158,8 +169,9 @@ class TemporalCohortCreator:
                 if cohort is not None:
                     cohort_name = config.name
                     self.temporal_cohorts[cohort_name] = cohort
+                    n = cohort.attrs.get("sample_size", len(cohort))
                     self.logger.info(
-                        f"  ✓ Created: {year} {specimen_key} N={len(cohort)} "
+                        f"  ✓ Created: {year} {specimen_key} N={n} "
                         f"({context.description})"
                     )
                 else:
@@ -187,7 +199,8 @@ class TemporalCohortCreator:
                     "cohort_name": name,
                     "specimen_type": specimen,
                     "year": year,
-                    "n_isolates": len(cohort),
+                    "n_isolates": cohort.attrs.get("sample_size", len(cohort)),
+                    "pairwise_rows": len(cohort),
                     "n_features": cohort.shape[1],
                 }
             )

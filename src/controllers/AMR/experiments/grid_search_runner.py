@@ -20,6 +20,10 @@ from src.controllers.AMR.evaluation.internal_evaluator import InternalEvaluator
 from src.controllers.AMR.evaluation.stability_analyzer import StabilityAnalyzer
 from src.controllers.AMR.evaluation.ics_evaluator import ICSEvaluator
 from src.controllers.AMR.experiments.results import ResultCollection, SingleRunResult
+from src.controllers.AMR.data.pairwise_aggregate import (
+    select_material_level_rows,
+    validate_pairwise_aggregate,
+)
 
 
 class GridSearchRunner:
@@ -51,6 +55,7 @@ class GridSearchRunner:
 
         # data-related
         self.data_loader = DataLoader(str(config.data.data_path))
+        self._validate_loaded_data()
         self.preprocessor = DataPreprocessor(
             genera=config.data.genera,
             materials=config.data.materials,
@@ -77,6 +82,18 @@ class GridSearchRunner:
         s1 = set(df_subset["ab_1"].astype("string").dropna().astype(str).unique())
         s2 = set(df_subset["ab_2"].astype("string").dropna().astype(str).unique())
         return sorted(s1.union(s2))
+
+    def _validate_loaded_data(self) -> None:
+        if not getattr(self.data_loader, "is_pairwise", False):
+            return
+
+        summary = validate_pairwise_aggregate(
+            self.data_loader.df,
+            expected_genera=self.config.data.genera,
+            expected_materials=self.config.data.materials,
+            strict_expected=self.config.data.strict_expected_cohorts,
+        )
+        self.logger.info("Validated pairwise aggregate data: %s", summary.as_dict())
 
     # ------------------------------------------------------------------ #
     # Data preparation: per (genus, material) subset
@@ -127,6 +144,15 @@ class GridSearchRunner:
             if missing:
                 self.logger.warning(
                     "Subset looks pairwise but missing required columns %s; skipping.", missing
+                )
+                return None, []
+
+            df_subset = select_material_level_rows(df_subset)
+            if df_subset.empty:
+                self.logger.warning(
+                    "No valid material-level aggregate pairwise rows for subset genus=%s material=%s; skipping.",
+                    genus,
+                    material,
                 )
                 return None, []
 

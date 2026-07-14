@@ -24,7 +24,7 @@ class NetworkSimilarityEvaluator:
         self.networks: Dict[str, nx.Graph] = {}
         self.results: Optional[pd.DataFrame] = None
 
-    def matrix_to_network(self, matrix: pd.DataFrame, name: str, threshold: float = 0.1) -> nx.Graph:
+    def matrix_to_network(self, matrix: pd.DataFrame, name: str, threshold: float = 0.3) -> nx.Graph:
         """
         Convert similarity matrix to a network graph.
 
@@ -101,7 +101,7 @@ class NetworkSimilarityEvaluator:
         try:
             # Use Louvain method for community detection
             import community as community_louvain
-            partition = community_louvain.best_partition(G, weight='weight')
+            partition = community_louvain.best_partition(G, weight='weight', random_state=100)
 
             # Modularity
             modularity = community_louvain.modularity(
@@ -230,8 +230,8 @@ class NetworkSimilarityEvaluator:
             import community as community_louvain
 
             # Get community assignments for common nodes
-            partition1 = community_louvain.best_partition(G1, weight='weight')
-            partition2 = community_louvain.best_partition(G2, weight='weight')
+            partition1 = community_louvain.best_partition(G1, weight='weight', random_state=100)
+            partition2 = community_louvain.best_partition(G2, weight='weight', random_state=100)
 
             # Align community labels for common nodes
             labels1 = [partition1[n] for n in common_nodes]
@@ -266,7 +266,7 @@ class NetworkSimilarityEvaluator:
 
         return comparison
 
-    def evaluate_all_networks(self, threshold: float = 0.1) -> pd.DataFrame:
+    def evaluate_all_networks(self, threshold: float = 0.3) -> pd.DataFrame:
         """Evaluate all networks and create comparison matrix."""
         results = []
         network_names = list(self.networks.keys())
